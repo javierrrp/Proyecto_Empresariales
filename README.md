@@ -47,3 +47,7 @@ Características principales
 - Historial: Permite tener un registro de las modificaciones realizadas a los presupuestos y transacciones.
 
 - Interfaz amigable: Cuenta con un diseño moderno, simple y accesible para cualquier usuario. 
+
+
+
+El proyecto sera creado con React JS, y para base de datos, usaremos Supabase
