@@ -53,24 +53,3 @@ Características principales
 El proyecto sera creado con React JS, y para base de datos, usaremos Supabase
 
 
-
-(NO TERMINADO AUN, EN DESARROLLO
-Modulos del Sistema
-
-src/
-│
-├── components/
-|   ├── Conexion/
-|       ├──Supabase.js
-|   ├──
-│   ├── SearchBar.jsx         
-│   └── ProductCard.jsx      
-│
-├── pages/                    
-│   └── HomePage.jsx          
-│
-├── services/                
-│   └── productService.js    
-│
-├── App.jsx                   
-└── main.jsx  
