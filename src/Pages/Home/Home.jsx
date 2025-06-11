@@ -1,4 +1,5 @@
 import React from 'react';
+
 import './Home.css';
 
 const Home = () => {
@@ -8,7 +9,7 @@ const Home = () => {
                 <div className="landing-text">
                     <h1>Lorem Ipsum</h1>
                     <h3>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</h3>
-                    <a href='#' className="btn btn-light">Empieza ya</a>
+                    <a href='/login' className="btn btn-light">Empieza ya</a>
                 </div>
             </div>
 
