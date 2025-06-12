@@ -73,6 +73,10 @@ form .input-box {
 
 }
 
+
+
+
+
 .input-box input{
     width: 100%;
     height: 100%;
@@ -82,7 +86,6 @@ form .input-box {
     border: 2px solid rgba(255, 255, 255, .1);
     border-radius: 40px;
     font-size: 16px;
-
 }
 
 .input-box input::placeholder {
@@ -102,6 +105,7 @@ form .remember-forgot {
     justify-content: space-between;
     font-size: 14.5px;
     margin: -15px 0 15px;
+    margin-top: 12px;
 }
 
 .remember-forgot label input {

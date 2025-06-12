@@ -65,10 +65,22 @@ const LoginRegister = () => {
                             <FaLock className='icon'/>
                         </div>
 
+                    
+                        <div className='role-select'>
+                            <label htmlFor='role'>Seleccione tipo de usuario</label>
+                            <select name='role' id='role'>
+                                <option value=''>Seleccione un rol</option>
+                                <option value='admin'>Administrador</option>
+                                <option value='standard'>Estandar</option>
+                                <option value='auditor'>Auditor</option>
+                            </select>
+                        </div>
+
                         <div className='remember-forgot'>
                             <label><input type='checkbox' />Acepto los terminos y condiciones</label>
                             <a href="#">Forgot password?</a>
                         </div>
+
 
                         <button type='submit'>Registrarse</button>
 
