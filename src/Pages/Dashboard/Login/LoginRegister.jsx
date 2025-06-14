@@ -1,9 +1,21 @@
 import { useState } from 'react';
-import './LoginRegister.css';
 import { FaUser, FaLock } from 'react-icons/fa';
+import { supabase } from '../../../supabase.js'
+import { useUser } from '../../../Context/UserContext.jsx';
+import { Link, useNavigate } from 'react-router-dom';
+import './LoginRegister.css'
 
 
 const LoginRegister = () => {
+
+    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [rol, setRol] = useState('');
+    const [mensaje, setMensaje] = useState('');
+    const navigate = useNavigate();
+    const { setUser } = useUser();
+
 
     const [action, setAction] = useState('');
 
@@ -14,20 +26,48 @@ const LoginRegister = () => {
     const loginLink = () => {
         setAction('')
     }
+
+
+
+    const handleLogin = async (e) => {
+        e.preventDefault();
+
+        const { data: usuarios, error } = await supabase
+            .from('usuarios')
+            .select('*')
+            .eq('username', username)
+            .eq('password', password)
+
+        if (error || usuarios.length === 0) {
+            setMensaje('Error: Credenciales inválidas');
+        } else {
+            const userData = usuarios[0];
+            alert('Inicio de sesión exitoso. Bienvenido ' + userData.nombre);
+            setUser(userData);
+            if (userData.rol === 'admin'){
+                navigate('/admin');
+            }
+
+        }
+    };
+
+
+
+
     return (
         <div className='container-general'>
             <div className={`wrapper${action}`} >
 
                 <div className='form-box login'>
-                    <form action="">
+                    <form onSubmit={handleLogin}>
                         <h1>Login</h1>
                         <div className='input-box'>
-                            <input type="text" 
+                            <input type="text" value={username} onChange={(e) => setUsername(e.target.value)}
                             placeholder='Username' required />
                             <FaUser className='icon'/>
                         </div>
                         <div className='input-box'>
-                            <input type="password"
+                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
                             placeholder='Password' required />
                             <FaLock className='icon'/>
                         </div>
@@ -50,17 +90,17 @@ const LoginRegister = () => {
                     <form action="">
                         <h1>Registration</h1>
                         <div className='input-box'>
-                            <input type="text" 
+                            <input type="text" value={username}
                             placeholder='Username' required />
                             <FaUser className='icon'/>
                         </div>
                         <div className='input-box'>
-                            <input type="email" 
+                            <input type="email" value={email} 
                             placeholder='Email' required />
                             <FaUser className='icon'/>
                         </div>
                         <div className='input-box'>
-                            <input type="password"
+                            <input type="password" value={password}
                             placeholder='Password' required />
                             <FaLock className='icon'/>
                         </div>

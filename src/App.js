@@ -6,8 +6,10 @@ import { BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 import Navbar from './Components/Navbar/Navbar.jsx';
 
 
-import LoginRegister from './Pages/Login/LoginRegister.jsx';
-import Home from './Pages/Home/Home.jsx';
+import LoginRegister from './Pages/Dashboard/Login/LoginRegister.jsx';
+import Home from './Pages/Dashboard/Home/Home.jsx';
+
+import PrincipalAdmin from './Pages/Admin/Principal/Principal.jsx';
 
 
 function App() {
@@ -17,6 +19,7 @@ function App() {
       <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/login' element={<LoginRegister />} />
+        <Route path='/admin' element={<PrincipalAdmin />} />
       </Routes>
     </Router>
   );
