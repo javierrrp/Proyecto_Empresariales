@@ -47,6 +47,13 @@ const LoginRegister = () => {
             if (userData.rol === 'admin'){
                 navigate('/admin');
             }
+            else if (userData.rol === 'auditor') {
+                navigate('/auditor');
+            } else if (userData.rol === 'estandar') {
+                navigate('/estandar');
+            } else {
+                setMensaje('Rol no reconocido');
+            }    
 
         }
     };

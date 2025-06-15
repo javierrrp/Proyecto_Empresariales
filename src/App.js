@@ -10,6 +10,8 @@ import LoginRegister from './Pages/Dashboard/Login/LoginRegister.jsx';
 import Home from './Pages/Dashboard/Home/Home.jsx';
 
 import PrincipalAdmin from './Pages/Admin/Principal/Principal.jsx';
+import PrincipalAuditor from './Pages/Auditor/Principal/Principal.jsx';
+import PrincipalEstandar from './Pages/Estandar/Principal/Principal.jsx';
 
 
 function App() {
@@ -20,6 +22,8 @@ function App() {
         <Route path='/' element={<Home />} />
         <Route path='/login' element={<LoginRegister />} />
         <Route path='/admin' element={<PrincipalAdmin />} />
+        <Route path='/auditor' element={<PrincipalAuditor/>}/>
+        <Route path='/estandar' element={<PrincipalEstandar/>}/>
       </Routes>
     </Router>
   );
