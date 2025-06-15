@@ -3,6 +3,7 @@
     background-color: #23415C;
     padding: 1% 0;
     font-size: 1.2em;
+    position: fixed;   
 }
 .navbar-brand {
     min-height: 55px;

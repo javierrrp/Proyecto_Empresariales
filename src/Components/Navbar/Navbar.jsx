@@ -1,6 +1,17 @@
 import './Navbar.css';
+import { useUser } from '../../Context/UserContext';
+import { useNavigate } from 'react-router-dom';
+
+
 
 const Navbar = () => {
+  const { user, logout } = useUser();
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  }
+
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" role="navigation">
       <div className="container-fluid">
@@ -18,6 +29,13 @@ const Navbar = () => {
         </button>
         <div className="collapse navbar-collapse" id="navbar-collapse-main">
           <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
+            {user && (
+              <li className='nav-item'>
+                <div className='nav-link'>
+                  <button className='btn btn-danger' onClick={handleLogout}>Cerrar Sesion</button>
+                </div>
+              </li>
+            )}
             <li className="nav-item">
               <a className="nav-link active" aria-current="page" href="#">Home</a>
             </li>
@@ -30,6 +48,11 @@ const Navbar = () => {
             <li className="nav-item">
               <a className="nav-link" href="#">Opiniones</a>
             </li>
+            {user && (
+              <li className='nav-item'>
+                <span className="nav-link" style={{color: 'white' }}>Hola! + {user.username}</span>
+              </li>
+            )}
           </ul>
         </div>
       </div>

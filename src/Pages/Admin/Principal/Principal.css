@@ -1,20 +1,51 @@
-#contenedor-principal {
-    background-color: #48AAE8;
-    display: table;
-    height: 40vh;
-    position: relative;
-    width: 100%;
-    background-size: cover;
-
-}
 
 .presupuestos {
     display: flex;
-    justify-content: center;      /* Centra horizontalmente */
-    align-items: flex-start;      /* Alinea al inicio vertical */
-    flex-wrap: wrap;              /* Permite que las tarjetas bajen a otra fila */
-    gap: 20px;                    /* Espacio entre tarjetas */
-    margin-top: 40px;
-    padding: 20px;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding-top: 110px;
+}
 
+.icono {
+    font-size: 2.5rem;
+}
+
+
+.sidebar {
+    width: 220px;
+    background-color: #48AAE8;
+    color: #fff;
+    padding: 20px;
+    box-sizing: border-box;
+    min-height: calc(100vh - 60px); /* asegura altura completa, menos la navbar */
+    position: sticky;
+    top: 60px; /* evita que tape la navbar si haces scroll */
+}
+
+
+.sidebar nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar nav ul li {
+  margin-bottom: 15px;
+}
+
+.sidebar nav ul li a {
+  color: #ccc;
+  text-decoration: none;
+  font-weight: 600;
+  display: block;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar nav ul li a:hover {
+  background-color: #444;
+  color: #fff;
 }
