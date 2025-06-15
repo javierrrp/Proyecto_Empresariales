@@ -1,10 +1,51 @@
-import React from "react";
-
+import React, { use, useEffect, useState } from "react";
+import { supabase } from '../../../supabase.js'
+import { useUser } from '../../../Context/UserContext.jsx';
+import "./Principal.css";
 
 const PrincipalAdmin = () => {
+
+    const [budget, setBudget] = useState([]);
+    const { user } = useUser();
+    
+    useEffect(() => {
+        const GetBudget = async () => {
+            
+            const { data: presupuestos, error } = await supabase
+                .from('presupuestos')
+                .select('*')
+                .eq('id_usuario', user.id)
+    
+            if (error || presupuestos.length === 0) {
+                console.log('Error');
+            } else {
+                const userData = presupuestos;
+                setBudget(userData);    
+            }
+        };
+        GetBudget();
+        
+    }, [user]);
     return (
         <div>
-            <h1>Test</h1>
+            <div id='contenedor-principal'>
+                
+            </div>
+
+            <div className="presupuestos"> 
+
+                {budget.map((budgets, index) => (
+                    <div className="card" key={index} style={{ width: '18rem' }}>
+                        <div className="card-body">
+                            <h5 className="card-title">{budgets ? budgets.nombre : 'Cargando'}</h5>
+                            <h6 className="card-subtitle mb-2 text-body-secondary">{budgets ? budgets.id : 'Cargando'}</h6>
+                            <h1 className="card-text">${budgets ? budgets.monto_total : 'Cargando'}</h1>
+                            <a href="#" className="card-link">Card link</a>
+                            <a href="#" className="card-link">Another link</a>
+                        </div>
+                    </div>
+                ))} 
+            </div>
         </div>
     )
 }

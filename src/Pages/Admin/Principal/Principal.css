@@ -1,0 +1,20 @@
+#contenedor-principal {
+    background-color: #48AAE8;
+    display: table;
+    height: 40vh;
+    position: relative;
+    width: 100%;
+    background-size: cover;
+
+}
+
+.presupuestos {
+    display: flex;
+    justify-content: center;      /* Centra horizontalmente */
+    align-items: flex-start;      /* Alinea al inicio vertical */
+    flex-wrap: wrap;              /* Permite que las tarjetas bajen a otra fila */
+    gap: 20px;                    /* Espacio entre tarjetas */
+    margin-top: 40px;
+    padding: 20px;
+
+}
