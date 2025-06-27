@@ -50,7 +50,7 @@ const Navbar = () => {
             </li>
             {user && (
               <li className='nav-item'>
-                <span className="nav-link" style={{color: 'white' }}>Hola! + {user.username}</span>
+                <span className="nav-link" style={{color: 'white' }}>Hola! {user.username}</span>
               </li>
             )}
           </ul>

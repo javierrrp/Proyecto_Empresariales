@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Bar } from "react-chartjs-2";
 import { supabase } from "../../../supabase";
 import "chart.js/auto";
 import { FaPiggyBank } from "react-icons/fa";
+import * as XLSX from "xlsx";
 
 const PrincipalAuditor = () => {
   const [budget, setBudget] = useState([]);
   const [graficoData, setGraficoData] = useState(null);
+  const graficoRef = useRef();
   const [mostrarGrafico, setMostrarGrafico] = useState(false);
   const [resumenFinanciero, setResumenFinanciero] = useState({
     ingresos: 0,
@@ -87,6 +89,33 @@ const PrincipalAuditor = () => {
     setMostrarGrafico(false);
   };
 
+  const exportar_excel = () => {
+    const wb = XLSX.utils.book_new();
+
+  // Hoja 1: Resumen financiero
+    const resumenData = [
+      ["Resumen Financiero"],
+      ["Ingresos", resumenFinanciero.ingresos],
+      ["Egresos", resumenFinanciero.egresos],
+      ["Balance", resumenFinanciero.balance],
+    ];
+    const resumenSheet = XLSX.utils.aoa_to_sheet(resumenData);
+    XLSX.utils.book_append_sheet(wb, resumenSheet, "Resumen");
+
+    // Hoja 2: Datos del gráfico
+    const graficoRaw = graficoData?.labels.map((label, index) => ({
+      Fecha: label,
+      Balance: graficoData.datasets[0].data[index],
+    })) || [];
+
+    const graficoSheet = XLSX.utils.json_to_sheet(graficoRaw);
+    XLSX.utils.book_append_sheet(wb, graficoSheet, "Gráfico Diario");
+
+    // Exportar archivo
+    XLSX.writeFile(wb, "resumen-financiero.xlsx");
+  };
+
+
   return (
     <div style={{ display: "flex" }} className="admin-container">
       <div className="panel-superior-derecho">
@@ -103,12 +132,13 @@ const PrincipalAuditor = () => {
 
         {mostrarGrafico && (
           <div className="modal-overlay" onClick={cerrarGrafico}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content" ref={graficoRef} onClick={(e) => e.stopPropagation()}>
               <h2>Resumen Financiero</h2>
               <div style={{ marginBottom: "1rem" }}>
                 <p>Ingresos totales: <strong>${resumenFinanciero.ingresos}</strong></p>
                 <p>Egresos totales: <strong>${resumenFinanciero.egresos}</strong></p>
                 <p>Balance total: <strong>${resumenFinanciero.balance}</strong></p>
+                <button className='btn btn-warning' onClick={exportar_excel}>Exportar</button>
               </div>
               {graficoData ? (
                 <Bar data={graficoData} />
@@ -116,6 +146,7 @@ const PrincipalAuditor = () => {
                 <p>No hay datos para mostrar.</p>
               )}
             </div>
+            
           </div>
         )}
       </div>
@@ -141,6 +172,7 @@ const PrincipalAuditor = () => {
                   <h1 className="card-text">${budgets.monto_total}</h1>
                   <a href="#" className="card-link">Ver Movimientos</a>
                 </div>
+               
               </div>
             ))}
           </div>
