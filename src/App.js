@@ -11,9 +11,14 @@ import Home from './Pages/Dashboard/Home/Home.jsx';
 
 import PrincipalAdmin from './Pages/Admin/Principal/Principal.jsx';
 import Registro from './Pages/Admin/Registro/Registro.jsx';
+import Settings from './Pages/Admin/Configuracion/Settings.jsx';
 
 import PrincipalAuditor from './Pages/Auditor/Principal/Principal.jsx';
+import SettingsAuditor from './Pages/Auditor/Configuracion/Settings.jsx';
+
+
 import PrincipalEstandar from './Pages/Estandar/Principal/Principal.jsx';
+import SettingsEstandar from './Pages/Estandar/Configuracion/Settings.jsx';
 
 
 
@@ -27,8 +32,12 @@ function App() {
         <Route path='/login' element={<LoginRegister />} />
         <Route path='/admin' element={<PrincipalAdmin />} />
           <Route path='/registrar' element={<Registro />} />
+          <Route path='/settingsadmin' element={<Settings />} />
+        
         <Route path='/auditor' element={<PrincipalAuditor/>}/>
+          <Route path='/settingsauditor' element={<SettingsAuditor />} />
         <Route path='/estandar' element={<PrincipalEstandar/>}/>
+          <Route path='/settingsestandar' element={<SettingsEstandar />} />
 
 
       </Routes>

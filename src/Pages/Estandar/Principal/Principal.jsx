@@ -67,7 +67,7 @@ const PrincipalEstandar = () => {
                         <li><a href="#dashboard">Dashboard</a></li>
                         <li><a href="#presupuestos">Presupuestos</a></li>
                         <li><a onClick={handleMostrarGrafico}>Resumen Financiero</a></li>
-                        <li><a href="#configuracion">Configuración</a></li>
+                        <li><a href="/settingsestandar">Configuración</a></li>
                     </ul>
                 </nav>
             </aside>
