@@ -35,7 +35,7 @@ const PrincipalAdmin = () => {
                     <ul>
                         <li><a href="#dashboard">Dashboard</a></li>
                         <li><a href="#presupuestos">Presupuestos</a></li>
-                        <li><a href="#movimientos">Movimientos</a></li>
+                        <li><a href="/movimientos">Movimientos</a></li>
                         <li><a href="/registrar">Gestion usuarios</a></li>
                         <li><a href="/settingsadmin">Configuración</a></li>
                     </ul>

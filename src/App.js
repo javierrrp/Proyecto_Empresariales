@@ -12,6 +12,7 @@ import Home from './Pages/Dashboard/Home/Home.jsx';
 import PrincipalAdmin from './Pages/Admin/Principal/Principal.jsx';
 import Registro from './Pages/Admin/Registro/Registro.jsx';
 import Settings from './Pages/Admin/Configuracion/Settings.jsx';
+import Movimientos from './Pages/Admin/Movimientos/Movimientos.jsx';
 
 import PrincipalAuditor from './Pages/Auditor/Principal/Principal.jsx';
 import SettingsAuditor from './Pages/Auditor/Configuracion/Settings.jsx';
@@ -33,6 +34,7 @@ function App() {
         <Route path='/admin' element={<PrincipalAdmin />} />
           <Route path='/registrar' element={<Registro />} />
           <Route path='/settingsadmin' element={<Settings />} />
+          <Route path='/movimientos' element={<Movimientos />} />
         
         <Route path='/auditor' element={<PrincipalAuditor/>}/>
           <Route path='/settingsauditor' element={<SettingsAuditor />} />

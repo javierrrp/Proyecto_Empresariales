@@ -1,0 +1,36 @@
+.sidebar {
+    width: 220px;
+    background-color: #48AAE8;
+    color: #fff;
+    padding: 20px;
+    box-sizing: border-box;
+    min-height: calc(100vh - 60px); /* asegura altura completa, menos la navbar */
+    position: sticky;
+    top: 60px; /* evita que tape la navbar si haces scroll */
+}
+
+
+.sidebar nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar nav ul li {
+  margin-bottom: 15px;
+}
+
+.sidebar nav ul li a {
+  color: #ccc;
+  text-decoration: none;
+  font-weight: 600;
+  display: block;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar nav ul li a:hover {
+  background-color: #444;
+  color: #fff;
+}
