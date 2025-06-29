@@ -39,11 +39,37 @@ const PrincipalEstandar = () => {
   return (
     <div className="admin-container">
       <div className="panel-superior-derecho">
+<<<<<<< Updated upstream
         <h2>Resumen Financiero</h2>
         {graficoData ? (
           <Bar data={graficoData} />
         ) : (
           <p>Cargando gráfico...</p>
+=======
+        <aside className="sidebar">
+                <nav>
+                    <ul>
+                        <li><a href="#dashboard">Dashboard</a></li>
+                        <li><a href="#presupuestos">Presupuestos</a></li>
+                        <li><a onClick={handleMostrarGrafico}>Resumen Financiero</a></li>
+                        <li><a href="/settingsestandar">Configuración</a></li>
+                    </ul>
+                </nav>
+            </aside>
+ 
+
+        {mostrarGrafico && (
+          <div className="modal-overlay" onClick={cerrarGrafico}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}> 
+              <h2>Resumen Financiero</h2>
+              {graficoData ? (
+                <Bar data={graficoData} />
+              ) : (
+              <p>Cargando gráfico...</p>
+              )}
+            </div>
+          </div>
+>>>>>>> Stashed changes
         )}
       </div>
 
