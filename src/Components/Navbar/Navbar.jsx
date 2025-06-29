@@ -45,9 +45,6 @@ const Navbar = () => {
             <li className="nav-item">
               <a className="nav-link" href="#">Servicios</a>
             </li>
-            <li className="nav-item">
-              <a className="nav-link" href="#">Opiniones</a>
-            </li>
             {user && (
               <li className='nav-item'>
                 <span className="nav-link" style={{color: 'white' }}>Hola! {user.username}</span>

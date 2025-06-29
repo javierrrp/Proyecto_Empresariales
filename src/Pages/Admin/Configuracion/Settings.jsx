@@ -3,17 +3,7 @@ import "./Settings.css";
 
 const Settings = () => (
   <main className="settings-wrapper">
-    <aside className="sidebar">
-      <nav>
-        <ul>
-          <li><a href="#dashboard">Dashboard</a></li>
-          <li><a href="/admin">Presupuestos</a></li>
-          <li><a href="#movimientos">Movimientos</a></li>
-          <li><a href="/registrar">Gestión usuarios</a></li>
-          <li><a href="/settings">Configuración</a></li>
-        </ul>
-      </nav>
-    </aside>
+
 
     <section className="interfaz">
       {/* Cuenta */}
