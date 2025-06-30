@@ -2,35 +2,78 @@ import React, { useEffect, useState } from "react";
 import { supabase } from '../../../supabase.js'
 import { useUser } from '../../../Context/UserContext.jsx';
 import { FaPiggyBank } from "react-icons/fa";
+import Swal from 'sweetalert2'
 import "./Principal.css";
 
 const PrincipalAdmin = () => {
+    
+    const today        = new Date();
+    const currentYear  = today.getFullYear();
+    const currentMonth = today
+    .toLocaleString("es-CL", { month: "long" })            
+    .toLowerCase();
 
     const [budget, setBudget] = useState([]);
     const { user } = useUser();
     const [showModal, setShowModal] = useState(false);
+
+    const [nombre, setNombre] = useState('');
+    const [anio, setAnio] = useState(currentYear);
+    const [periodo, setPeriodo] = useState('');
+    const [mes,  setMes]  = useState(currentMonth);
+
+
+
     
-    useEffect(() => {
-        const GetBudget = async () => {
-            
-            const { data: presupuestos, error } = await supabase
-                .from('presupuestos')
-                .select('*')
-                .eq('id_usuario', user.id)
     
-            if (error || presupuestos.length === 0) {
-                console.log('Error');
-            } else {
-                const userData = presupuestos;
-                setBudget(userData);    
-            }
-        };
+    const GetBudget = async () => {
+        const { data: presupuestos, error } = await supabase
+        .from('presupuestos')
+        .select('*')
+        .eq('id_usuario', user.id);
+
+        if (error) {
+        console.log('Error al obtener presupuestos:', error);
+        } else {
+        setBudget(presupuestos);
+        }
+    };
+
+    const AddBudget = async () => {
+        const { error } = await supabase.from('presupuestos').insert([
+            { nombre, anio, periodo, mes, id_usuario: user.id }
+        ]);
+
+        if (error) {
+            console.log("Error al registrar:", error);
+            Swal.fire("Error", "No se pudo agregar el presupuesto.", "error");
+            return;
+        }
+
+        Swal.fire({
+        title: "Presupuesto creado correctamente!",
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false
+        });
+
+        setShowModal(false);
+        setNombre('');
+        setAnio('');
+        setPeriodo('');
+        setMes('');
         GetBudget();
-        
+    };
+
+    useEffect(() => {
+        if (user) {
+            GetBudget();
+        }
     }, [user]);
+
     return (
         <div>
-        <button type="button" class="btn btn-info" onClick={() => setShowModal(true)}>
+        <button type="button" className="btn btn-info" onClick={() => setShowModal(true)}>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="40" height="40">
             <path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z"/>
             </svg>
@@ -49,34 +92,23 @@ const PrincipalAdmin = () => {
                     <form>
                         <div className="mb-3">
                         <label>Nombre:</label>
-                        <input type="text" className="form-control" />
+                        <input type="text" className="form-control" value={nombre} onChange={e => setNombre(e.target.value)}/>
                         </div>
-                        <div className="mb-3">
-                        <label>Año:</label>
-                        <input type="text" className="form-control" />
-                        </div>
+                        
                         <div className="mb-3">
                         <label>Periodo:</label>
-                        <input type="text" className="form-control" />
-                        </div>
-                        <div className="mb-3">
-                        <label>Mes:</label>
-                        <select className="form-control">
-                            <option value="enero">Enero</option>
-                            <option value="febrero">Febrero</option>
-                            <option value="marzo">Marzo</option>
-                            <option value="abril">Abril</option>
-                            <option value="mayo">Mayo</option>
-                            <option value="junio">Junio</option>
-                            <option value="julio">Julio</option>
-                            <option value="agosto">Agosto</option>
-                            <option value="septiembre">Septiembre</option>
-                            <option value="octubre">Octubre</option>
-                            <option value="noviembre">Noviembre</option>
-                            <option value="diciembre">Diciembre</option>
+                        <select className="form-control" value={periodo} onChange={e => setPeriodo(e.target.value)}>
+                            <option value="anual">Anual</option>
+                            <option value="mensual">Mensual</option>
+
                         </select>
                         </div>
-                    <button type="submit" className="btn btn-link">Crear</button>
+    
+                    <button className="btn btn-link" onClick={async (e) => {
+                        e.preventDefault();
+                        await AddBudget();
+                        await GetBudget();
+                    }}>Crear</button>
                     </form>
                     </div>
                 </div>

@@ -7,8 +7,8 @@ const Home = () => {
         <div>
             <div id='home'>
                 <div className="landing-text">
-                    <h1>Lorem Ipsum</h1>
-                    <h3>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</h3>
+                    <h1>BizBudget</h1>
+                    <h3>Comodidad con sus ingresos</h3>
                     <a href='/login' className="btn btn-light">Empieza ya</a>
                 </div>
             </div>
@@ -21,13 +21,14 @@ const Home = () => {
                     </div>
                     <div className='col-sm-6 text-center'>
                         <h2>All about lorem ipsum</h2>
-                        <p className="lead">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed volutpat posuere suscipit. 
-                            Aenean sit amet facilisis erat. Morbi luctus a nisl vitae sollicitudin. Maecenas mattis est sit amet auctor rhoncus. 
-                            Nulla vehicula tincidunt nunc nec accumsan. Pellentesque dignissim lorem eget est mollis gravida.
+                        <p className="lead">La gestión y el control de presupuestos representan un desafío constante para las empresas, 
+                            especialmente cuando manejan múltiples áreas, proyectos o departamentos.
                         </p>
-                        <p className="lead">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed volutpat posuere suscipit. 
-                            Aenean sit amet facilisis erat. Morbi luctus a nisl vitae sollicitudin. Maecenas mattis est sit amet auctor rhoncus. 
-                            Nulla vehicula tincidunt nunc nec accumsan. Pellentesque dignissim lorem eget est mollis gravida.
+                        <p className="lead">Para ello les presentamos BizBugdet 
+                            una aplicación de gestión de presupuestos cómoda y fácil de usar. 
+                            El objetivo de BizBugdet es ser una herramienta que permita al usuario 
+                            gestionar, registrar, consultar y analizar presupuestos de forma eficiente, 
+                            minimizando errores humanos y optimizando los tiempos de gestión.
                         </p>
                     </div>
                 </div>
