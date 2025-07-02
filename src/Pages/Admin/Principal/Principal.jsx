@@ -22,9 +22,23 @@ const PrincipalAdmin = () => {
     const [periodo, setPeriodo] = useState('');
     const [mes,  setMes]  = useState(currentMonth);
 
+    const [MostrarMovimientos,setMostrarMovimientos] = useState(false);
+    const [presupuestosList, setPresupuestosList] = useState([]);
+    const [presupuestoActivo, setPresupuestoActivo] = useState(null);
 
 
-    
+    const getTransacciones = async (id_presupuesto) => {
+      const { data, error } = await supabase
+        .from('transacciones')
+        .select('*')            // añade aquí los campos que necesites
+        .eq('id_presupuesto', id_presupuesto);
+
+    if (error) {
+        console.error('Error al obtener movimientos:', error);
+    } else {
+        setPresupuestosList(data);
+    }
+    };
     
     const GetBudget = async () => {
         const { data: presupuestos, error } = await supabase
@@ -40,29 +54,34 @@ const PrincipalAdmin = () => {
     };
 
     const AddBudget = async () => {
-        const { error } = await supabase.from('presupuestos').insert([
-            { nombre, anio, periodo, mes, id_usuario: user.id }
-        ]);
 
-        if (error) {
-            console.log("Error al registrar:", error);
-            Swal.fire("Error", "No se pudo agregar el presupuesto.", "error");
+        if (!nombre || !periodo) {
+            Swal.fire("Campos incompletos", "Completa todos los campos obligatorios.", "warning");
             return;
         }
+        try {
+            const { error } = await supabase.from('presupuestos').insert([
+                { nombre, anio, periodo, mes, id_usuario: user.id }
+            ]);
 
-        Swal.fire({
-        title: "Presupuesto creado correctamente!",
-        icon: "success",
-        timer: 2000,
-        showConfirmButton: false
-        });
 
-        setShowModal(false);
-        setNombre('');
-        setAnio('');
-        setPeriodo('');
-        setMes('');
-        GetBudget();
+            Swal.fire({
+            title: "Presupuesto creado correctamente!",
+            icon: "success",
+            timer: 2000,
+            showConfirmButton: false
+            });
+
+            setShowModal(false);
+            setNombre('');
+            setAnio('');
+            setPeriodo('');
+            setMes('');
+            GetBudget();
+        } catch (err){
+            console.log("Error al registrar:", err.message);
+            Swal.fire("Error", "No se pudo agregar el presupuesto.", "error");
+        }
     };
 
     useEffect(() => {
@@ -70,6 +89,17 @@ const PrincipalAdmin = () => {
             GetBudget();
         }
     }, [user]);
+
+
+    const handleMostrarMovs = async (id_presupuesto) => {
+        await getTransacciones(id_presupuesto);
+        setPresupuestoActivo(id_presupuesto)
+        setMostrarMovimientos(true);
+    };
+
+    const cerrarMovs = () => {
+        setMostrarMovimientos(false);
+    };
 
     return (
         <div>
@@ -126,10 +156,37 @@ const PrincipalAdmin = () => {
                             <h5 className="card-title">{budgets ? budgets.nombre : 'Cargando'}</h5>
                             <h6 className="card-subtitle mb-2 text-body-secondary">{budgets ? budgets.id : 'Cargando'}</h6>
                             <h1 className="card-text">${budgets ? budgets.monto_total : 'Cargando'}</h1>
-                            <a href="#" className="card-link">Ver Movimientos</a>
+                            <a onClick={() => handleMostrarMovs(budgets.id)} className="card-link">Ver Movimientos</a>
                         </div>
                     </div>
                 ))} 
+
+                {MostrarMovimientos && (
+                          <div className="modal-overlay" onClick={cerrarMovs}>
+                            <div className="modal-content">
+                              <h2>Movimientos</h2>
+
+                              {presupuestosList.length === 0 ? (
+                                <p>Ñao</p>
+                              ) : (
+                                <ul className="list-group">
+                                {presupuestosList.map((mov) => (
+                                    <li key={mov.id} className="list-group-item d-flex justify-content-between">
+                                    <span>{mov.tipo}</span>
+                                    <span>${mov.monto}</span>
+                                    <span>{mov.origen}</span>
+                                    <td>{new Date(mov.fecha).toLocaleDateString()}</td>
+                                    </li>
+                                ))}
+                                </ul>
+
+                
+                            )}
+                              
+                            </div>
+                            
+                          </div>
+                )}
             </div>
         </div>
         </div>
