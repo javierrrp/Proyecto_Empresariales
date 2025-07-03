@@ -54,9 +54,6 @@ function App() {
           <Route path='settingsauditor' element={<SettingsAuditor />} />
         </Route>
 
-
-        <Route path='/auditor' element={<PrincipalAuditor/>}/>
-          <Route path='/settingsauditor' element={<SettingsAuditor />} />
         <Route path='/estandar' element={<PrincipalEstandar/>}/>
           <Route path='/settingsestandar' element={<SettingsEstandar />} />
 

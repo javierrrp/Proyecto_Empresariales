@@ -16,9 +16,6 @@ const Home = () => {
             <div className='padding'>
             <div className='container'>
                 <div className="row">
-                    <div className='col-sm-6'>
-                        <h2>Ola</h2>
-                    </div>
                     <div className='col-sm-6 text-center'>
                         <h2>All about lorem ipsum</h2>
                         <p className="lead">La gestión y el control de presupuestos representan un desafío constante para las empresas, 

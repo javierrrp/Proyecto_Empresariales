@@ -1,6 +1,7 @@
+
 import './Navbar.css';
 import { useUser } from '../../Context/UserContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, NavLink } from 'react-router-dom';
 
 
 
@@ -12,6 +13,13 @@ const Navbar = () => {
     navigate('/');
   }
 
+   const homePath = user
+      if(user.role === 'admin'){
+        homePath = '/admin'}
+      else if(user.rol === 'auditor'){
+        homePath = '/auditor'
+      }
+       
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" role="navigation">
       <div className="container-fluid">
@@ -37,7 +45,9 @@ const Navbar = () => {
               </li>
             )}
             <li className="nav-item">
-              <a className="nav-link active" aria-current="page" href="#">Home</a>
+              <NavLink to={homePath} className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
+              Home
+              </NavLink>
             </li>
             <li className="nav-item">
               <a className="nav-link" href="/about">About</a>

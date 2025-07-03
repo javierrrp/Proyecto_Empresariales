@@ -119,16 +119,7 @@ const PrincipalAuditor = () => {
   return (
     <div style={{ display: "flex" }} className="admin-container">
       <div className="panel-superior-derecho">
-        <aside className="sidebar">
-          <nav>
-            <ul>
-              <li><a href="#dashboard">Dashboard</a></li>
-              <li><a href="#presupuestos">Presupuestos</a></li>
-              <li><a onClick={handleMostrarGrafico}>Resumen Financiero</a></li>
-              <li><a href="/settingsauditor">Configuración</a></li>
-            </ul>
-          </nav>
-        </aside>
+
 
         {mostrarGrafico && (
           <div className="modal-overlay" onClick={cerrarGrafico}>
