@@ -40,10 +40,10 @@ const Navbar = () => {
               <a className="nav-link active" aria-current="page" href="#">Home</a>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="#">About</a>
+              <a className="nav-link" href="/about">About</a>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="#">Servicios</a>
+              <a className="nav-link" href="/services">Servicios</a>
             </li>
             {user && (
               <li className='nav-item'>

@@ -8,6 +8,9 @@ import Navbar from './Components/Navbar/Navbar.jsx';
 
 import LoginRegister from './Pages/Dashboard/Login/LoginRegister.jsx';
 import Home from './Pages/Dashboard/Home/Home.jsx';
+import About from './Pages/Dashboard/About/About.jsx';
+import Services from './Pages/Dashboard/Services/Services.jsx';
+
 
 import PrincipalAdmin from './Pages/Admin/Principal/Principal.jsx';
 import Registro from './Pages/Admin/Registro/Registro.jsx';
@@ -34,6 +37,8 @@ function App() {
       <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/login' element={<LoginRegister />} />
+        <Route path='/about' element={<About />} />
+        <Route path='/services' element={<Services />} />
 
         {/* Admin */}
         <Route path='/admin' element={<AdminLayout />}>
