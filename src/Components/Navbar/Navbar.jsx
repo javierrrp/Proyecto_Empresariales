@@ -1,13 +1,17 @@
 import './Navbar.css';
-<<<<<<< Updated upstream
-=======
 import { useUser } from '../../Context/UserContext';
 import { useNavigate } from 'react-router-dom';
 import logo from '../Images/logo.png'
 
->>>>>>> Stashed changes
 
 const Navbar = () => {
+  const { user, logout } = useUser();
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  }
+
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" role="navigation">
       <div className="container-fluid">
@@ -24,25 +28,9 @@ const Navbar = () => {
           <span className="navbar-toggler-icon"></span>
         </button>
         <div className="collapse navbar-collapse" id="navbar-collapse-main">
-<<<<<<< Updated upstream
-          <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
-            <li className="nav-item">
-              <a className="nav-link active" aria-current="page" href="#">Home</a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="#">About</a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="#">Servicios</a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="#">Opiniones</a>
-            </li>
-          </ul>
-=======
         <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
           <li className="nav-item">
-            <a className="nav-link active" aria-current="page" href="#">Home</a>
+            <a className="nav-link active" aria-current="page" href="/home">Home</a>
           </li>
           <li className="nav-item">
             <a className="nav-link" href="#">About</a>
@@ -61,7 +49,6 @@ const Navbar = () => {
           )}
         </ul>
 
->>>>>>> Stashed changes
         </div>
       </div>
     </nav>

@@ -45,30 +45,38 @@ function Registro() {
   };
 
   const guardar = async () => {
-    if (idEditando === null) {
-      // Insertar nuevo usuario
-      const { error } = await supabase.from('usuarios').insert([
-        { nombre, apellidos, email, password, rol, username }
-      ]);
-      if (error) console.log("Error al registrar:", error);
-    } else {
-      // Actualizar usuario existente
-      const { error } = await supabase
-        .from('usuarios')
-        .update({ nombre, apellidos, email, password, rol, username })
-        .eq('id', idEditando);
-      if (error) console.log("Error al actualizar:", error);
+    if (!nombre || !apellidos || !email || !password || !rol || !username) {
+                Swal.fire("Campos incompletos", "Completa todos los campos obligatorios.", "warning");
+                return;
     }
+    try {
+        if (idEditando === null) {
+          // Insertar nuevo usuario
+          const { error } = await supabase.from('usuarios').insert([
+            { nombre, apellidos, email, password, rol, username }
+          ]);
+          if (error) console.log("Error al registrar:", error);
+        } else {
+          // Actualizar usuario existente
+          const { error } = await supabase
+            .from('usuarios')
+            .update({ nombre, apellidos, email, password, rol, username })
+            .eq('id', idEditando);
+          if (error) throw error;
+        }
 
-    Swal.fire({
-        title: "Usuario editado/agregado correctamente!",
-        icon: "success",
-        draggable: true
-    });
-    getEmpleados();
-    limpiar();
+        Swal.fire({
+            title: "Usuario editado/agregado correctamente!",
+            icon: "success",
+            draggable: true
+        });
+        getEmpleados();
+        limpiar();
+      } catch(err) {
+        console.log("Error al registrar:", err.message);
+        Swal.fire("Error", "No se pudo agregar/actualizar el usuario.", "error");
+      }
   };
-
   const editarEmpleado = (id) => {
     const emp = empleadosList.find(u => u.id === id);
     if (!emp) return;

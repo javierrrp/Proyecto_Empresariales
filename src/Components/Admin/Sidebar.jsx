@@ -8,7 +8,7 @@ const Sidebar = () => {
     <aside className="sidebar">
       <nav>
         <ul>
-          <li><Link to="/admin">Dashboard</Link></li>
+          <li><Link to="/admin">Gestión Presupuestos</Link></li>
           <li><Link to="/admin/registrar">Gestión usuarios</Link></li>
           <li><Link to="/admin/settingsadmin">Configuración</Link></li>
         </ul>

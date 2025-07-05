@@ -44,15 +44,16 @@ const LoginRegister = () => {
             const userData = usuarios[0];
             alert('Inicio de sesión exitoso. Bienvenido ' + userData.nombre);
             setUser(userData);
-            if (userData.rol === 'admin') {
+            if (userData.rol === 'admin'){
                 navigate('/admin');
-              } else if (userData.rol === 'auditor') {
+            }
+            else if (userData.rol === 'auditor') {
                 navigate('/auditor');
-              } else if (userData.rol === 'estandar') {
+            } else if (userData.rol === 'estandar') {
                 navigate('/estandar');
-              } else {
+            } else {
                 setMensaje('Rol no reconocido');
-              }              
+            }    
 
         }
     };

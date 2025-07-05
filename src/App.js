@@ -11,8 +11,6 @@ import PrincipalAdmin from './Pages/Admin/Principal/Principal.jsx';
 import Registro from './Pages/Admin/Registro/Registro.jsx';
 import Settings from './Pages/Admin/Configuracion/Settings.jsx';
 
-<<<<<<< Updated upstream
-=======
 import PrincipalAuditor from './Pages/Auditor/Principal/Principal.jsx';
 import SettingsAuditor from './Pages/Auditor/Configuracion/Settings.jsx';
 
@@ -21,20 +19,13 @@ import SettingsEstandar from './Pages/Estandar/Configuracion/Settings.jsx';
 
 import AdminLayout from './Layout/AdminLayout.jsx';
 import AuditorLayout from './Layout/AuditorLayout.jsx';
+import EstandarLayout from './Layout/EstandarLayout.jsx';
 
->>>>>>> Stashed changes
 function App() {
   return (
-<Router>
+    <Router>
       <Navbar />
       <Routes>
-<<<<<<< Updated upstream
-        <Route path='/'        element={<Home />} />
-        <Route path='/login'   element={<LoginRegister />} />
-        <Route path='/admin'   element={<PrincipalAdmin />} />
-        <Route path='/auditor' element={<PrincipalAuditor/>}/>
-        <Route path='/estandar' element={<PrincipalEstandar/>}/>
-=======
         {/* Rutas públicas */}
         <Route path='/' element={<Home />} />
         <Route path='/login' element={<LoginRegister />} />
@@ -50,13 +41,14 @@ function App() {
         <Route path='/auditor' element={<AuditorLayout />}>
         <Route index element={<PrincipalAuditor />} />
         <Route path='settingsauditor' element={<SettingsAuditor />} />
-      </Route>
+        </Route>
 
 
         {/* Estandar */}
-        <Route path='/estandar' element={<PrincipalEstandar />} />
-        <Route path='/settingsestandar' element={<SettingsEstandar />} />
->>>>>>> Stashed changes
+        <Route path='/estandar' element={<EstandarLayout />}>
+        <Route index element={<PrincipalEstandar />} />
+        <Route path='settingsestandar' element={<SettingsEstandar />} />
+        </Route>
       </Routes>
     </Router>
   );
