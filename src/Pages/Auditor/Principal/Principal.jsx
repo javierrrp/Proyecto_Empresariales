@@ -16,12 +16,15 @@ const PrincipalAuditor = () => {
     balance: 0,
   });
 
+  const [movimientos, setMovimientos] = useState([]);
+  const [showMovimientos, setShowMovimientos] = useState(false);
+  const [tituloMovs, setTituloMovs] = useState("");
+
   useEffect(() => {
     const fetchDatos = async () => {
-      // Obtener presupuestos
       const { data: presupuestos, error: errorPresupuestos } = await supabase
         .from("presupuestos")
-        .select("*");
+        .select("*, usuarios:usuarios(nombre)");
 
       if (errorPresupuestos) {
         console.log("Error al obtener presupuestos:", errorPresupuestos);
@@ -29,7 +32,6 @@ const PrincipalAuditor = () => {
         setBudget(presupuestos || []);
       }
 
-      // Obtener transacciones
       const { data: transacciones, error: errorTransacciones } = await supabase
         .from("transacciones")
         .select("*")
@@ -40,10 +42,8 @@ const PrincipalAuditor = () => {
         return;
       }
 
-      // Resumen financiero
       let ingresos = 0;
       let egresos = 0;
-
       const resumenDiario = {};
 
       (transacciones || []).forEach((t) => {
@@ -53,7 +53,7 @@ const PrincipalAuditor = () => {
         if (t.tipo === "ingreso") {
           ingresos += monto;
           resumenDiario[fecha] = (resumenDiario[fecha] || 0) + monto;
-        } else if (t.tipo === "egreso") {
+        } else if (t.tipo === "egreso" || t.tipo === "gasto") {
           egresos += monto;
           resumenDiario[fecha] = (resumenDiario[fecha] || 0) - monto;
         }
@@ -62,7 +62,6 @@ const PrincipalAuditor = () => {
       const balance = ingresos - egresos;
       setResumenFinanciero({ ingresos, egresos, balance });
 
-      // Datos para el gráfico
       setGraficoData({
         labels: Object.keys(resumenDiario),
         datasets: [
@@ -89,37 +88,62 @@ const PrincipalAuditor = () => {
     setMostrarGrafico(false);
   };
 
-  const exportar_excel = () => {
-    const wb = XLSX.utils.book_new();
+  const handleVerMovimientos = async (id_presupuesto, nombre) => {
+    const { data, error } = await supabase
+      .from("transacciones")
+      .select("*")
+      .eq("id_presupuesto", id_presupuesto)
+      .order("fecha", { ascending: false });
 
-  // Hoja 1: Resumen financiero
-    const resumenData = [
-      ["Resumen Financiero"],
-      ["Ingresos", resumenFinanciero.ingresos],
-      ["Egresos", resumenFinanciero.egresos],
-      ["Balance", resumenFinanciero.balance],
-    ];
-    const resumenSheet = XLSX.utils.aoa_to_sheet(resumenData);
-    XLSX.utils.book_append_sheet(wb, resumenSheet, "Resumen");
-
-    // Hoja 2: Datos del gráfico
-    const graficoRaw = graficoData?.labels.map((label, index) => ({
-      Fecha: label,
-      Balance: graficoData.datasets[0].data[index],
-    })) || [];
-
-    const graficoSheet = XLSX.utils.json_to_sheet(graficoRaw);
-    XLSX.utils.book_append_sheet(wb, graficoSheet, "Gráfico Diario");
-
-    // Exportar archivo
-    XLSX.writeFile(wb, "resumen-financiero.xlsx");
+    if (error) {
+      console.error("Error al obtener movimientos:", error);
+    } else {
+      setMovimientos(data);
+      setTituloMovs(nombre);
+      setShowMovimientos(true);
+    }
   };
 
+  const exportarPresupuesto = async (id_presupuesto, nombre) => {
+    const { data: presupuesto } = await supabase
+      .from("presupuestos")
+      .select("*")
+      .eq("id", id_presupuesto)
+      .single();
+
+    const { data: transacciones } = await supabase
+      .from("transacciones")
+      .select("*")
+      .eq("id_presupuesto", id_presupuesto);
+
+    const wb = XLSX.utils.book_new();
+
+    const hojaPresupuesto = [
+      ["Presupuesto", nombre],
+      ["Año", presupuesto.anio],
+      ["Mes", presupuesto.mes],
+      ["Periodo", presupuesto.periodo],
+      ["Monto Total", presupuesto.monto_total],
+    ];
+    const resumenSheet = XLSX.utils.aoa_to_sheet(hojaPresupuesto);
+    XLSX.utils.book_append_sheet(wb, resumenSheet, "Resumen");
+
+    const hojaMovimientos = transacciones.map((t) => ({
+      Fecha: new Date(t.fecha).toLocaleDateString(),
+      Tipo: t.tipo,
+      Monto: t.monto,
+      Destinatario: t.destinatario,
+      Origen: t.origen,
+    }));
+    const movimientosSheet = XLSX.utils.json_to_sheet(hojaMovimientos);
+    XLSX.utils.book_append_sheet(wb, movimientosSheet, "Movimientos");
+
+    XLSX.writeFile(wb, `Presupuesto-${nombre}.xlsx`);
+  };
 
   return (
     <div style={{ display: "flex" }} className="admin-container">
       <div className="panel-superior-derecho">
-
         {mostrarGrafico && (
           <div className="modal-overlay" onClick={cerrarGrafico}>
             <div className="modal-content" ref={graficoRef} onClick={(e) => e.stopPropagation()}>
@@ -128,7 +152,7 @@ const PrincipalAuditor = () => {
                 <p>Ingresos totales: <strong>${resumenFinanciero.ingresos}</strong></p>
                 <p>Egresos totales: <strong>${resumenFinanciero.egresos}</strong></p>
                 <p>Balance total: <strong>${resumenFinanciero.balance}</strong></p>
-                <button className='btn btn-warning' onClick={exportar_excel}>Exportar</button>
+                <button className="btn btn-warning" onClick={() => exportarPresupuesto(null, "General")}>Exportar</button>
               </div>
               {graficoData ? (
                 <Bar data={graficoData} />
@@ -136,16 +160,33 @@ const PrincipalAuditor = () => {
                 <p>No hay datos para mostrar.</p>
               )}
             </div>
-            
+          </div>
+        )}
+
+        {showMovimientos && (
+          <div className="modal-overlay" onClick={() => setShowMovimientos(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <h3>Movimientos - {tituloMovs}</h3>
+              {movimientos.length === 0 ? (
+                <p>No hay movimientos.</p>
+              ) : (
+                <ul className="list-group">
+                  {movimientos.map((mov) => (
+                    <li key={mov.id} className="list-group-item d-flex justify-content-between">
+                      <span>{mov.tipo}</span>
+                      <span>${mov.monto}</span>
+                      <span>{mov.destinatario}</span>
+                      <span>{new Date(mov.fecha).toLocaleDateString()}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         )}
       </div>
 
       <div className="panel-inferior-derecho">
-        <h2>Accesos de Solo Lectura</h2>
-        <p className="text-gray-600">
-          Como auditor, puedes revisar la información, pero no puedes modificarla.
-        </p>
 
         {budget.length === 0 ? (
           <p>No hay presupuestos disponibles.</p>
@@ -157,12 +198,15 @@ const PrincipalAuditor = () => {
                   <FaPiggyBank className="icono" />
                   <h5 className="card-title">{budgets.nombre || "Sin nombre"}</h5>
                   <h6 className="card-subtitle mb-2 text-body-secondary">
-                    ID: {budgets.id}
+                    Cuenta de: {budgets.usuarios?.nombre?.split(" ")[0] || "Desconocido"} (ID: {budgets.id})
                   </h6>
                   <h1 className="card-text">${budgets.monto_total}</h1>
-                  <a href="#" className="card-link">Ver Movimientos</a>
-                  <p></p>
-                  <a href="#" onClick={handleMostrarGrafico}>Resumen Financiero</a>
+                  <a href="#" className="card-link" onClick={() => handleVerMovimientos(budgets.id, budgets.nombre)}>
+                    Ver Movimientos
+                  </a><br />
+                  <a href="#" className="card-link" onClick={() => exportarPresupuesto(budgets.id, budgets.nombre)}>
+                    Exportar
+                  </a><br />
                 </div>
               </div>
             ))}

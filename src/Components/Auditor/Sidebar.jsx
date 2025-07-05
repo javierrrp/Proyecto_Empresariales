@@ -8,9 +8,8 @@ const Sidebar = () => {
     <aside className="sidebar">
       <nav>
         <ul>
-          <li><a href="#dashboard">Dashboard</a></li>
-          <li><a href="#presupuestos">Presupuestos</a></li>
-          <li><a href="/settingsauditor">Configuración</a></li>
+          <li><a href="/auditor">Presupuestos</a></li>
+          <li><a href="auditor/settingsauditor">Configuración</a></li>
         </ul>
       </nav>
     </aside>
