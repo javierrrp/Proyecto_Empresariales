@@ -8,28 +8,15 @@ import "./Principal.css";
 const PrincipalEstandar = () => {
   const today = new Date();
   const currentYear = today.getFullYear();
-  const currentMonth = today.toLocaleString("es-CL", { month: "long" }).toLowerCase();
 
   const [budget, setBudget] = useState([]);
   const { user } = useUser();
-  const [showModal, setShowModal] = useState(false);
   const [MostrarMovimientos, setMostrarMovimientos] = useState(false);
   const [presupuestosList, setPresupuestosList] = useState([]);
   const [presupuestoActivo, setPresupuestoActivo] = useState(null);
 
-  const [nombre, setNombre] = useState('');
-  const [anio, setAnio] = useState(currentYear);
-  const [periodo, setPeriodo] = useState('');
-  const [mes, setMes] = useState(currentMonth);
-
   const [showGastoModal, setShowGastoModal] = useState(false);
   const [gasto, setGasto] = useState({ descripcion: "", monto: "", id_presupuesto: "" });
-
-  const [showIngresoModal, setShowIngresoModal] = useState(false);
-  const [ingreso, setIngreso] = useState({ descripcion: "", monto: "", id_presupuesto: "" });
-
-  const [showEditarModal, setShowEditarModal] = useState(false);
-  const [presupuestoEditar, setPresupuestoEditar] = useState(null);
 
   const GetBudget = async () => {
     const { data: presupuestos, error } = await supabase
@@ -40,28 +27,6 @@ const PrincipalEstandar = () => {
       console.log('Error al obtener presupuestos:', error);
     } else {
       setBudget(presupuestos);
-    }
-  };
-
-  const AddBudget = async () => {
-    if (!nombre || !periodo) {
-      Swal.fire("Campos incompletos", "Completa todos los campos obligatorios.", "warning");
-      return;
-    }
-    try {
-      const { error } = await supabase.from('presupuestos').insert([
-        { nombre, anio, periodo, mes, id_usuario: user.id, monto_total: 0 }
-      ]);
-      Swal.fire("Presupuesto creado correctamente!", "", "success");
-      setShowModal(false);
-      setNombre('');
-      setAnio(currentYear);
-      setPeriodo('');
-      setMes(currentMonth);
-      GetBudget();
-    } catch (err) {
-      console.log("Error al registrar:", err.message);
-      Swal.fire("Error", "No se pudo agregar el presupuesto.", "error");
     }
   };
 
@@ -121,67 +86,12 @@ const PrincipalEstandar = () => {
     GetBudget();
   };
 
-  const handleAddIngreso = async () => {
-    const { descripcion, monto, id_presupuesto } = ingreso;
-
-    if (!descripcion || !monto || !id_presupuesto) {
-      Swal.fire("Campos incompletos", "Completa todos los campos.", "warning");
-      return;
-    }
-
-    const { data: presupuesto } = await supabase
-      .from('presupuestos')
-      .select('monto_total')
-      .eq('id', id_presupuesto)
-      .single();
-
-    await supabase.from('transacciones').insert([{
-      tipo: 'ingreso',
-      monto: parseFloat(monto),
-      origen: 'manual',
-      destinatario: descripcion,
-      fecha: new Date().toISOString(),
-      id_presupuesto: parseInt(id_presupuesto),
-    }]);
-
-    await supabase
-      .from('presupuestos')
-      .update({ monto_total: presupuesto.monto_total + parseFloat(monto) })
-      .eq('id', id_presupuesto);
-
-    Swal.fire("Ingreso registrado correctamente", "", "success");
-    setIngreso({ descripcion: "", monto: "", id_presupuesto: "" });
-    setShowIngresoModal(false);
-    GetBudget();
-  };
-
-  const handleEditarPresupuesto = async () => {
-    const { id, nombre, periodo, mes, anio } = presupuestoEditar;
-
-    const { error } = await supabase
-      .from('presupuestos')
-      .update({ nombre, periodo, mes, anio })
-      .eq('id', id);
-
-    if (error) {
-      Swal.fire("Error", "No se pudo actualizar el presupuesto", "error");
-    } else {
-      Swal.fire("Presupuesto actualizado", "", "success");
-      setShowEditarModal(false);
-      setPresupuestoEditar(null);
-      GetBudget();
-    }
-  };
-
   useEffect(() => {
     if (user) GetBudget();
   }, [user]);
 
   return (
     <div>
-      {/* Botón Crear Presupuesto */}
-      <button className="btn btn-info" onClick={() => setShowModal(true)}>Crear Presupuesto</button>
-
       {/* Lista de presupuestos */}
       <div className="presupuestos">
         {budget.map((budgets, index) => (
@@ -196,38 +106,12 @@ const PrincipalEstandar = () => {
                 setGasto({ ...gasto, id_presupuesto: budgets.id });
                 setShowGastoModal(true);
               }} className="card-link">Agregar Gasto</a><br />
-              <a onClick={() => {
-                setIngreso({ ...ingreso, id_presupuesto: budgets.id });
-                setShowIngresoModal(true);
-              }} className="card-link">Agregar Ingreso</a><br />
-              <a onClick={() => {
-                setPresupuestoEditar(budgets);
-                setShowEditarModal(true);
-              }} className="card-link">Editar Cuenta</a>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Modales */}
-      {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2>Crear Presupuesto</h2>
-            <form>
-              <input className="form-control" placeholder="Nombre" value={nombre} onChange={e => setNombre(e.target.value)} />
-              <select className="form-control" value={periodo} onChange={e => setPeriodo(e.target.value)}>
-                <option value="">Seleccionar periodo</option>
-                <option value="anual">Anual</option>
-                <option value="mensual">Mensual</option>
-              </select>
-              <br />
-              <button className="btn btn-success" onClick={e => { e.preventDefault(); AddBudget(); }}>Crear</button>
-            </form>
-          </div>
-        </div>
-      )}
-
+      {/* Modal de movimientos */}
       {MostrarMovimientos && (
         <div className="modal-overlay" onClick={cerrarMovs}>
           <div className="modal-content">
@@ -247,6 +131,7 @@ const PrincipalEstandar = () => {
         </div>
       )}
 
+      {/* Modal de gasto */}
       {showGastoModal && (
         <div className="modal-overlay" onClick={() => setShowGastoModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -261,46 +146,6 @@ const PrincipalEstandar = () => {
                 onChange={e => setGasto({ ...gasto, monto: e.target.value })} />
               <br />
               <button className="btn btn-danger" type="submit">Registrar Gasto</button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {showIngresoModal && (
-        <div className="modal-overlay" onClick={() => setShowIngresoModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h3>Agregar Ingreso</h3>
-            <form onSubmit={e => { e.preventDefault(); handleAddIngreso(); }}>
-              <input className="form-control" placeholder="Descripción"
-                value={ingreso.descripcion}
-                onChange={e => setIngreso({ ...ingreso, descripcion: e.target.value })} />
-              <input className="form-control" placeholder="Monto"
-                type="number"
-                value={ingreso.monto}
-                onChange={e => setIngreso({ ...ingreso, monto: e.target.value })} />
-              <br />
-              <button className="btn btn-success" type="submit">Registrar Ingreso</button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {showEditarModal && presupuestoEditar && (
-        <div className="modal-overlay" onClick={() => setShowEditarModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h3>Editar Presupuesto</h3>
-            <form onSubmit={e => { e.preventDefault(); handleEditarPresupuesto(); }}>
-              <input className="form-control"
-                value={presupuestoEditar.nombre}
-                onChange={e => setPresupuestoEditar({ ...presupuestoEditar, nombre: e.target.value })} />
-              <select className="form-control"
-                value={presupuestoEditar.periodo}
-                onChange={e => setPresupuestoEditar({ ...presupuestoEditar, periodo: e.target.value })}>
-                <option value="mensual">Mensual</option>
-                <option value="anual">Anual</option>
-              </select>
-              <br />
-              <button className="btn btn-primary" type="submit">Actualizar</button>
             </form>
           </div>
         </div>
