@@ -3,6 +3,7 @@ import { FaUser, FaLock } from 'react-icons/fa';
 import { supabase } from '../../../supabase.js'
 import { useUser } from '../../../Context/UserContext.jsx';
 import { Link, useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import './LoginRegister.css'
 
 
@@ -35,26 +36,32 @@ const LoginRegister = () => {
         const { data: usuarios, error } = await supabase
             .from('usuarios')
             .select('*')
-            .eq('username', username)
-            .eq('password', password)
+            .eq('username', username);
 
         if (error || usuarios.length === 0) {
-            setMensaje('Error: Credenciales inválidas');
-        } else {
-            const userData = usuarios[0];
-            alert('Inicio de sesión exitoso. Bienvenido ' + userData.nombre);
-            setUser(userData);
-            if (userData.rol === 'admin'){
-                navigate('/admin');
-            }
-            else if (userData.rol === 'auditor') {
-                navigate('/auditor');
-            } else if (userData.rol === 'estandar') {
-                navigate('/estandar');
-            } else {
-                setMensaje('Rol no reconocido');
-            }    
+            setMensaje('Error: Usuario no encontrado');
+            return;
+        }
 
+        const userData = usuarios[0];
+
+        if (userData.password !== password) {
+            Swal.fire("Error", "Contraseña incorrecta", "error");
+            return;
+        }
+
+
+        alert('Inicio de sesión exitoso. Bienvenido ' + userData.nombre);
+        setUser(userData);
+
+        if (userData.rol === 'admin') {
+            navigate('/admin');
+        } else if (userData.rol === 'auditor') {
+            navigate('/auditor');
+        } else if (userData.rol === 'estandar') {
+            navigate('/estandar');
+        } else {
+            setMensaje('Rol no reconocido');
         }
     };
 
