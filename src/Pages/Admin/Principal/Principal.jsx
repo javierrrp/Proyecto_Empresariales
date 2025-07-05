@@ -44,7 +44,7 @@ const PrincipalAdmin = () => {
         const { data: presupuestos, error } = await supabase
         .from('presupuestos')
         .select('*')
-        .eq('id_usuario', user.id);
+        .or(`id_usuario.eq.${user.id},id_usuario.is.null`);
 
         if (error) {
         console.log('Error al obtener presupuestos:', error);
