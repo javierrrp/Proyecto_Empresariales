@@ -13,13 +13,13 @@ const Navbar = () => {
     navigate('/');
   }
 
-   const homePath = user
-      if(user.role === 'admin'){
+   let homePath = '/';
+
+      if(user?.role === 'admin'){
         homePath = '/admin'}
-      else if(user.rol === 'auditor'){
+      else if(user?.rol === 'auditor'){
         homePath = '/auditor'
-      }
-       
+      }  
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" role="navigation">
       <div className="container-fluid">
