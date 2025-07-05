@@ -1,181 +1,306 @@
 import React, { useEffect, useState } from "react";
-import { FaPiggyBank } from "react-icons/fa";
-import { Bar } from "react-chartjs-2";
-import { Link } from "react-router-dom";
-import { supabase } from "../../../supabase";
+import { supabase } from '../../../supabase.js';
 import { useUser } from '../../../Context/UserContext.jsx';
-import "chart.js/auto";
-
-import './Principal.css';
+import { FaPiggyBank } from "react-icons/fa";
+import Swal from 'sweetalert2';
+import "./Principal.css";
 
 const PrincipalEstandar = () => {
-  const [presupuestos, setPresupuestos] = useState([]);
-  const [graficoData, setGraficoData] = useState(null);
-  const [mostrarGrafico, setMostrarGrafico] = useState(false);
-  const [mostrarFormularioGasto, setMostrarFormularioGasto] = useState(false);
-  const [nuevoGasto, setNuevoGasto] = useState({ descripcion: "", monto: "", id_presupuesto: "" });
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.toLocaleString("es-CL", { month: "long" }).toLowerCase();
 
+  const [budget, setBudget] = useState([]);
   const { user } = useUser();
+  const [showModal, setShowModal] = useState(false);
+  const [MostrarMovimientos, setMostrarMovimientos] = useState(false);
+  const [presupuestosList, setPresupuestosList] = useState([]);
+  const [presupuestoActivo, setPresupuestoActivo] = useState(null);
 
-  useEffect(() => {
-    const GetBudget = async () => {
-      const { data, error } = await supabase
-        .from('presupuestos')
-        .select('*')
-        .eq('id_usuario', user.id);
+  const [nombre, setNombre] = useState('');
+  const [anio, setAnio] = useState(currentYear);
+  const [periodo, setPeriodo] = useState('');
+  const [mes, setMes] = useState(currentMonth);
 
-      if (!error) {
-        setPresupuestos(data);
-      } else {
-        console.error("Error obteniendo presupuestos:", error.message);
-      }
-    };
+  const [showGastoModal, setShowGastoModal] = useState(false);
+  const [gasto, setGasto] = useState({ descripcion: "", monto: "", id_presupuesto: "" });
 
-    if (user?.id) GetBudget();
-  }, [user]);
+  const [showIngresoModal, setShowIngresoModal] = useState(false);
+  const [ingreso, setIngreso] = useState({ descripcion: "", monto: "", id_presupuesto: "" });
 
-  useEffect(() => {
-    const fetchTransacciones = async () => {
-      if (presupuestos.length === 0) return;
+  const [showEditarModal, setShowEditarModal] = useState(false);
+  const [presupuestoEditar, setPresupuestoEditar] = useState(null);
 
-      const idsPresupuesto = presupuestos.map(p => p.id);
-
-      const { data: transacciones, error } = await supabase
-        .from("transacciones")
-        .select("*")
-        .in("id_presupuesto", idsPresupuesto)
-        .order("fecha", { ascending: false })
-        .limit(10);
-
-      if (error) {
-        console.error("Error al obtener transacciones:", error.message);
-        return;
-      }
-
-      const resumen = transacciones.reduce((acc, t) => {
-        const fecha = new Date(t.fecha).toLocaleDateString();
-        acc[fecha] = (acc[fecha] || 0) + (t.tipo === "ingreso" ? t.monto : -t.monto);
-        return acc;
-      }, {});
-
-      setGraficoData({
-        labels: Object.keys(resumen),
-        datasets: [
-          {
-            label: "Balance Diario",
-            data: Object.values(resumen),
-            backgroundColor: Object.values(resumen).map(m => m >= 0 ? "#60a5fa" : "#f87171")
-          }
-        ]
-      });
-    };
-
-    fetchTransacciones();
-  }, [presupuestos]);
-
-  const abrirGrafico = () => setMostrarGrafico(true);
-  const cerrarGrafico = () => setMostrarGrafico(false);
-  const abrirFormularioGasto = () => setMostrarFormularioGasto(true);
-  const cerrarFormularioGasto = () => setMostrarFormularioGasto(false);
-
-  const handleChange = (e) => {
-    setNuevoGasto({ ...nuevoGasto, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmitGasto = async (e) => {
-    e.preventDefault();
-
-    const { error } = await supabase.from('transacciones').insert([{
-      tipo: 'gasto',
-      monto: parseFloat(nuevoGasto.monto),
-      origen: 'manual',
-      destinatario: nuevoGasto.descripcion,
-      fecha: new Date().toISOString(),
-      id_presupuesto: parseInt(nuevoGasto.id_presupuesto),
-    }]);
-
+  const GetBudget = async () => {
+    const { data: presupuestos, error } = await supabase
+      .from('presupuestos')
+      .select('*')
+      .eq('id_usuario', user.id);
     if (error) {
-      console.error("Error al insertar gasto:", error.message);
+      console.log('Error al obtener presupuestos:', error);
     } else {
-      alert("Gasto registrado correctamente");
-      setNuevoGasto({ descripcion: "", monto: "", id_presupuesto: "" });
-      cerrarFormularioGasto();
+      setBudget(presupuestos);
     }
   };
 
-  return (
-    <div className="presupuestos">
-      {presupuestos.map((p, index) => (
-        <div className="card" key={index} style={{ width: '18rem' }}>
-          <div className="card-body">
-            <FaPiggyBank className="icono" />
-            <h5 className="card-title">{p.nombre}</h5>
-            <p className="card-subtitle mb-2 text-muted">ID Presupuesto: {p.id}</p>
+  const AddBudget = async () => {
+    if (!nombre || !periodo) {
+      Swal.fire("Campos incompletos", "Completa todos los campos obligatorios.", "warning");
+      return;
+    }
+    try {
+      const { error } = await supabase.from('presupuestos').insert([
+        { nombre, anio, periodo, mes, id_usuario: user.id, monto_total: 0 }
+      ]);
+      Swal.fire("Presupuesto creado correctamente!", "", "success");
+      setShowModal(false);
+      setNombre('');
+      setAnio(currentYear);
+      setPeriodo('');
+      setMes(currentMonth);
+      GetBudget();
+    } catch (err) {
+      console.log("Error al registrar:", err.message);
+      Swal.fire("Error", "No se pudo agregar el presupuesto.", "error");
+    }
+  };
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <Link to="/estandar/nuevo-ingreso" className="card-link">Agregar Ingreso</Link>
-              <a href="#" className="card-link" onClick={abrirFormularioGasto}>Agregar Gasto</a>
-              <a href="#" className="card-link" onClick={abrirGrafico}>Ver Resumen Financiero</a>
+  const handleMostrarMovs = async (id_presupuesto) => {
+    const { data, error } = await supabase
+      .from('transacciones')
+      .select('*')
+      .eq('id_presupuesto', id_presupuesto);
+
+    if (error) {
+      console.error('Error al obtener movimientos:', error);
+    } else {
+      setPresupuestosList(data);
+      setPresupuestoActivo(id_presupuesto);
+      setMostrarMovimientos(true);
+    }
+  };
+
+  const cerrarMovs = () => setMostrarMovimientos(false);
+
+  const handleAddGasto = async () => {
+    const { descripcion, monto, id_presupuesto } = gasto;
+
+    if (!descripcion || !monto || !id_presupuesto) {
+      Swal.fire("Campos incompletos", "Completa todos los campos.", "warning");
+      return;
+    }
+
+    const { data: presupuesto } = await supabase
+      .from('presupuestos')
+      .select('monto_total')
+      .eq('id', id_presupuesto)
+      .single();
+
+    if (presupuesto.monto_total < parseFloat(monto)) {
+      Swal.fire("Saldo insuficiente", "No hay suficiente saldo en el presupuesto.", "warning");
+      return;
+    }
+
+    await supabase.from('transacciones').insert([{
+      tipo: 'gasto',
+      monto: parseFloat(monto),
+      origen: 'manual',
+      destinatario: descripcion,
+      fecha: new Date().toISOString(),
+      id_presupuesto: parseInt(id_presupuesto),
+    }]);
+
+    await supabase
+      .from('presupuestos')
+      .update({ monto_total: presupuesto.monto_total - parseFloat(monto) })
+      .eq('id', id_presupuesto);
+
+    Swal.fire("Gasto registrado correctamente", "", "success");
+    setGasto({ descripcion: "", monto: "", id_presupuesto: "" });
+    setShowGastoModal(false);
+    GetBudget();
+  };
+
+  const handleAddIngreso = async () => {
+    const { descripcion, monto, id_presupuesto } = ingreso;
+
+    if (!descripcion || !monto || !id_presupuesto) {
+      Swal.fire("Campos incompletos", "Completa todos los campos.", "warning");
+      return;
+    }
+
+    const { data: presupuesto } = await supabase
+      .from('presupuestos')
+      .select('monto_total')
+      .eq('id', id_presupuesto)
+      .single();
+
+    await supabase.from('transacciones').insert([{
+      tipo: 'ingreso',
+      monto: parseFloat(monto),
+      origen: 'manual',
+      destinatario: descripcion,
+      fecha: new Date().toISOString(),
+      id_presupuesto: parseInt(id_presupuesto),
+    }]);
+
+    await supabase
+      .from('presupuestos')
+      .update({ monto_total: presupuesto.monto_total + parseFloat(monto) })
+      .eq('id', id_presupuesto);
+
+    Swal.fire("Ingreso registrado correctamente", "", "success");
+    setIngreso({ descripcion: "", monto: "", id_presupuesto: "" });
+    setShowIngresoModal(false);
+    GetBudget();
+  };
+
+  const handleEditarPresupuesto = async () => {
+    const { id, nombre, periodo, mes, anio } = presupuestoEditar;
+
+    const { error } = await supabase
+      .from('presupuestos')
+      .update({ nombre, periodo, mes, anio })
+      .eq('id', id);
+
+    if (error) {
+      Swal.fire("Error", "No se pudo actualizar el presupuesto", "error");
+    } else {
+      Swal.fire("Presupuesto actualizado", "", "success");
+      setShowEditarModal(false);
+      setPresupuestoEditar(null);
+      GetBudget();
+    }
+  };
+
+  useEffect(() => {
+    if (user) GetBudget();
+  }, [user]);
+
+  return (
+    <div>
+      {/* Botón Crear Presupuesto */}
+      <button className="btn btn-info" onClick={() => setShowModal(true)}>Crear Presupuesto</button>
+
+      {/* Lista de presupuestos */}
+      <div className="presupuestos">
+        {budget.map((budgets, index) => (
+          <div className="card" key={index} style={{ width: '18rem' }}>
+            <div className="card-body">
+              <FaPiggyBank className="icono" />
+              <h5 className="card-title">{budgets.nombre}</h5>
+              <h6 className="card-subtitle mb-2 text-body-secondary">ID de Cuenta: {budgets.id}</h6>
+              <h1 className="card-text">${budgets.monto_total}</h1>
+              <a onClick={() => handleMostrarMovs(budgets.id)} className="card-link">Ver Movimientos</a><br />
+              <a onClick={() => {
+                setGasto({ ...gasto, id_presupuesto: budgets.id });
+                setShowGastoModal(true);
+              }} className="card-link">Agregar Gasto</a><br />
+              <a onClick={() => {
+                setIngreso({ ...ingreso, id_presupuesto: budgets.id });
+                setShowIngresoModal(true);
+              }} className="card-link">Agregar Ingreso</a><br />
+              <a onClick={() => {
+                setPresupuestoEditar(budgets);
+                setShowEditarModal(true);
+              }} className="card-link">Editar Cuenta</a>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
 
-      {/* Modal Gráfico */}
-      {mostrarGrafico && (
-        <div className="modal-overlay" onClick={cerrarGrafico}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h3>Resumen de Ganancias y Pérdidas</h3>
-            {graficoData ? (
-              <Bar data={graficoData} />
-            ) : (
-              <p>Cargando datos del gráfico...</p>
-            )}
+      {/* Modales */}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2>Crear Presupuesto</h2>
+            <form>
+              <input className="form-control" placeholder="Nombre" value={nombre} onChange={e => setNombre(e.target.value)} />
+              <select className="form-control" value={periodo} onChange={e => setPeriodo(e.target.value)}>
+                <option value="">Seleccionar periodo</option>
+                <option value="anual">Anual</option>
+                <option value="mensual">Mensual</option>
+              </select>
+              <br />
+              <button className="btn btn-success" onClick={e => { e.preventDefault(); AddBudget(); }}>Crear</button>
+            </form>
           </div>
         </div>
       )}
 
-      {/* Modal Formulario Gasto */}
-      {mostrarFormularioGasto && (
-        <div className="modal-overlay" onClick={cerrarFormularioGasto}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h3>Registrar Gasto</h3>
-            <form onSubmit={handleSubmitGasto}>
-              <label>Descripción:</label>
-              <input
-                type="text"
-                name="descripcion"
-                value={nuevoGasto.descripcion}
-                onChange={handleChange}
-                required
-              />
-              <label>Monto:</label>
-              <input
-                type="number"
-                name="monto"
-                value={nuevoGasto.monto}
-                onChange={handleChange}
-                required
-                step="0.01"
-              />
-              <label>Presupuesto:</label>
-              <select
-                name="id_presupuesto"
-                value={nuevoGasto.id_presupuesto}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Selecciona...</option>
-                {presupuestos.map(p => (
-                  <option key={p.id} value={p.id}>{p.nombre}</option>
+      {MostrarMovimientos && (
+        <div className="modal-overlay" onClick={cerrarMovs}>
+          <div className="modal-content">
+            <h2>Movimientos</h2>
+            {presupuestosList.length === 0 ? <p>No hay movimientos.</p> :
+              <ul className="list-group">
+                {presupuestosList.map(mov => (
+                  <li key={mov.id} className="list-group-item d-flex justify-content-between">
+                    <span>{mov.tipo}</span>
+                    <span>${mov.monto}</span>
+                    <span>{mov.destinatario}</span>
+                    <span>{new Date(mov.fecha).toLocaleDateString()}</span>
+                  </li>
                 ))}
-              </select>
+              </ul>}
+          </div>
+        </div>
+      )}
 
-              <br /><br />
-              <button type="submit">Guardar</button>
-              <button type="button" onClick={cerrarFormularioGasto} style={{ marginLeft: "10px" }}>
-                Cancelar
-              </button>
+      {showGastoModal && (
+        <div className="modal-overlay" onClick={() => setShowGastoModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <h3>Agregar Gasto</h3>
+            <form onSubmit={e => { e.preventDefault(); handleAddGasto(); }}>
+              <input className="form-control" placeholder="Descripción"
+                value={gasto.descripcion}
+                onChange={e => setGasto({ ...gasto, descripcion: e.target.value })} />
+              <input className="form-control" placeholder="Monto"
+                type="number"
+                value={gasto.monto}
+                onChange={e => setGasto({ ...gasto, monto: e.target.value })} />
+              <br />
+              <button className="btn btn-danger" type="submit">Registrar Gasto</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showIngresoModal && (
+        <div className="modal-overlay" onClick={() => setShowIngresoModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <h3>Agregar Ingreso</h3>
+            <form onSubmit={e => { e.preventDefault(); handleAddIngreso(); }}>
+              <input className="form-control" placeholder="Descripción"
+                value={ingreso.descripcion}
+                onChange={e => setIngreso({ ...ingreso, descripcion: e.target.value })} />
+              <input className="form-control" placeholder="Monto"
+                type="number"
+                value={ingreso.monto}
+                onChange={e => setIngreso({ ...ingreso, monto: e.target.value })} />
+              <br />
+              <button className="btn btn-success" type="submit">Registrar Ingreso</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showEditarModal && presupuestoEditar && (
+        <div className="modal-overlay" onClick={() => setShowEditarModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <h3>Editar Presupuesto</h3>
+            <form onSubmit={e => { e.preventDefault(); handleEditarPresupuesto(); }}>
+              <input className="form-control"
+                value={presupuestoEditar.nombre}
+                onChange={e => setPresupuestoEditar({ ...presupuestoEditar, nombre: e.target.value })} />
+              <select className="form-control"
+                value={presupuestoEditar.periodo}
+                onChange={e => setPresupuestoEditar({ ...presupuestoEditar, periodo: e.target.value })}>
+                <option value="mensual">Mensual</option>
+                <option value="anual">Anual</option>
+              </select>
+              <br />
+              <button className="btn btn-primary" type="submit">Actualizar</button>
             </form>
           </div>
         </div>
