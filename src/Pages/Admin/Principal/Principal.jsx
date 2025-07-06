@@ -423,7 +423,11 @@ const handleEliminarPresupuesto = async (id_presupuesto) => {
                         title="Eliminar movimiento"
                         style={{ minWidth: '40px' }}
                       >
+<<<<<<< Updated upstream
                         🗑️
+=======
+                        <FaTrash />
+>>>>>>> Stashed changes
                       </button>
                     </td>
                   </tr>

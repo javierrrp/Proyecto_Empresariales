@@ -17,7 +17,6 @@ const Home = () => {
             <div className='container'>
                 <div className="row">
                     <div className='col-sm-6'>
-                        <h2>Ola</h2>
                     </div>
                     <div className='col-sm-6 text-center'>
                         <h2>¿Que es BizBugdet?</h2>
