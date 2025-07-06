@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useRef } from "react";
+import React from "react";
 import "./Settings.css";
 
 const SettingsAuditor = () => (
   <main className="settings-wrapper">
+
     <section className="interfaz">
       {/* Cuenta */}
       <div className="config-section">

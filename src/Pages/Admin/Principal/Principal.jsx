@@ -127,10 +127,6 @@ const PrincipalAdmin = () => {
       return Swal.fire("Campos incompletos", "Completa todos los campos obligatorios.", "warning");
     }
     
-    if (isAdmin && !idUsuarioSeleccionado) {
-      return Swal.fire("Usuario requerido", "Selecciona un usuario para asignar el presupuesto.", "warning");
-    }
-
     try {
       const payload = {
         nombre,
@@ -310,6 +306,11 @@ const PrincipalAdmin = () => {
       setShowIngresoModal(false);
       
       fetchBudgets();
+      
+      // Refrescar movimientos si están abiertos
+      if (mostrarMovimientos && presupuestoActivo) {
+        fetchMovimientos(presupuestoActivo);
+      }
     } catch (error) {
       console.error("Error en registrarTransaccion:", error);
       Swal.fire("Error", "Ocurrió un error inesperado.", "error");
@@ -422,59 +423,66 @@ const PrincipalAdmin = () => {
                 Ver Movimientos
               </a>
               
-              {/* Acciones solo para admin */}
-              {isAdmin && (
-                <>
-                  <br />
-                  <a
-                    className="card-link"
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      setGasto({ descripcion: "", monto: "", id_presupuesto: b.id });
-                      setShowGastoModal(true);
-                    }}
-                  >
-                    Agregar Gasto
-                  </a>
-                  <br />
-                  <a
-                    className="card-link"
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      setIngreso({ descripcion: "", monto: "", id_presupuesto: b.id });
-                      setShowIngresoModal(true);
-                    }}
-                  >
-                    Agregar Ingreso
-                  </a>
-                </>
-              )}
+              {/* Acciones para admin y usuarios estándar */}
+              <br />
+              <a
+                className="card-link"
+                style={{ cursor: "pointer" }}
+                onClick={() => {
+                  setGasto({ descripcion: "", monto: "", id_presupuesto: b.id });
+                  setShowGastoModal(true);
+                }}
+              >
+                Agregar Gasto
+              </a>
+              <br />
+              <a
+                className="card-link"
+                style={{ cursor: "pointer" }}
+                onClick={() => {
+                  setIngreso({ descripcion: "", monto: "", id_presupuesto: b.id });
+                  setShowIngresoModal(true);
+                }}
+              >
+                Agregar Ingreso
+              </a>
+              <br />
+              <a
+                className="card-link"
+                style={{ cursor: "pointer" }}
+                onClick={() => {
+                  setPresupuestoEditar(b);
+                  setShowEditarModal(true);
+                }}
+              >
+                Editar Cuenta
+              </a>
               
-              {/* Botones de acción (solo admin) */}
+              {/* Botones de acción */}
+              <div style={{ position: "absolute", top: "8px", left: "13rem" }}>
+                <button 
+                  className="btn btn-warning btn-sm" 
+                  onClick={() => {
+                    setPresupuestoEditar(b);
+                    setShowEditarModal(true);
+                  }}
+                  title="Editar presupuesto"
+                >
+                  <FaPencilAlt />
+                </button>
+              </div>
+              
+              {/* Botón eliminar solo para admin */}
               {isAdmin && (
-                <>
-                  <div style={{ position: "absolute", top: "8px", left: "13rem" }}>
-                    <button 
-                      className="btn btn-warning btn-sm" 
-                      onClick={() => {
-                        setPresupuestoEditar(b);
-                        setShowEditarModal(true);
-                      }}
-                      title="Editar presupuesto"
-                    >
-                      <FaPencilAlt />
-                    </button>
-                  </div>
-                  <div style={{ position: "absolute", top: "8px", right: "8px" }}>
-                    <button 
-                      className="btn btn-danger btn-sm" 
-                      onClick={() => handleDeleteBudget(b.id)}
-                      title="Eliminar presupuesto"
-                    >
-                      <FaTrash />
-                    </button>
-                  </div>
-                </>
+                <div style={{ position: "absolute", top: "8px", right: "8px" }}>
+                  <button 
+                    className="btn btn-danger btn-sm" 
+                    onClick={() => handleDeleteBudget(b.id)}
+                    title="Eliminar presupuesto"
+                  >
+                    <FaTrash />
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -581,7 +589,7 @@ const PrincipalAdmin = () => {
                     <th>Descripción</th>
                     <th>Monto</th>
                     <th>Fecha</th>
-                    {isAdmin && <th>Acciones</th>}
+                    <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -596,22 +604,20 @@ const PrincipalAdmin = () => {
                         <td>{mov.destinatario}</td>
                         <td>${mov.monto.toLocaleString("es-CL")}</td>
                         <td>{new Date(mov.fecha).toLocaleString("es-CL")}</td>
-                        {isAdmin && (
-                          <td>
-                            <button
-                              className="btn btn-danger btn-sm"
-                              title="Eliminar movimiento"
-                              onClick={() => handleEliminarMovimiento(mov.id)}
-                            >
-                              <FaTrash />
-                            </button>
-                          </td>
-                        )}
+                        <td>
+                          <button
+                            className="btn btn-danger btn-sm"
+                            title="Eliminar movimiento"
+                            onClick={() => handleEliminarMovimiento(mov.id)}
+                          >
+                            <FaTrash />
+                          </button>
+                        </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={isAdmin ? 5 : 4} className="text-center">
+                      <td colSpan={5} className="text-center">
                         No hay movimientos registrados
                       </td>
                     </tr>

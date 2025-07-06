@@ -32,36 +32,45 @@ const LoginRegister = () => {
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        try {
+            const { data: userData, error, status } = await supabase
+                .from('usuarios')
+                .select('*')
+                .eq('username', username)
+                .maybeSingle();   // ← devuelve {…} | null
 
-        const { data: usuarios, error } = await supabase
-            .from('usuarios')
-            .select('*')
-            .eq('username', username);
+            if (error && status !== 406) {
+                Swal.fire('Error', `Problema al consultar la BD: ${error.message}`, 'error');
+                return;
+            }
 
-        if (error || usuarios.length === 0) {
-            setMensaje('Error: Usuario no encontrado');
-            return;
-        }
+            if (!userData) {
+                Swal.fire("Error", "Usuario no encontrado", "error");
+                return;
+            }
 
-        const userData = usuarios[0];
+            
 
-        if (userData.password !== password) {
-            Swal.fire("Error", "Contraseña incorrecta", "error");
-            return;
-        }
+            if (userData.password !== password) {
+                Swal.fire("Error", "Contraseña incorrecta", "error");
+                return;
+            }
 
 
-        alert('Inicio de sesión exitoso. Bienvenido ' + userData.nombre);
-        setUser(userData);
+            alert('Inicio de sesión exitoso. Bienvenido ' + userData.nombre);
+            setUser(userData);
 
-        if (userData.rol === 'admin') {
-            navigate('/admin');
-        } else if (userData.rol === 'auditor') {
-            navigate('/auditor');
-        } else if (userData.rol === 'estandar') {
-            navigate('/estandar');
-        } else {
-            setMensaje('Rol no reconocido');
+            if (userData.rol === 'admin') {
+                navigate('/admin');
+            } else if (userData.rol === 'auditor') {
+                navigate('/auditor');
+            } else if (userData.rol === 'estandar') {
+                navigate('/estandar');
+            } else {
+                setMensaje('Rol no reconocido');
+            }
+        } catch (err) {
+            Swal.fire('Error', `Excepción inesperada: ${err.message}`, 'error');
         }
     };
 
