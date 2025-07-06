@@ -55,177 +55,340 @@ const PrincipalAdmin = () => {
   /* ------------------------------------------------------------------ */
   /* 📡  SUPABASE QUERIES                                              */
   /* ------------------------------------------------------------------ */
+  
   /** Obtiene todos los presupuestos según rol */
   const fetchBudgets = async () => {
-    const query = supabase.from("presupuestos").select("*");
-    if (!isAdmin) query.or(`id_usuario.eq.${user.id},id_usuario.is.null`);
-    const { data, error } = await query;
-    if (error) return console.error("Error al obtener presupuestos:", error);
-    setBudget(data);
+    try {
+      const query = supabase.from("presupuestos").select("*");
+      // Si no es admin, solo obtener presupuestos propios
+      if (!isAdmin) {
+        query.eq("id_usuario", user.id);
+      }
+      
+      const { data, error } = await query;
+      if (error) {
+        console.error("Error al obtener presupuestos:", error);
+        return;
+      }
+      setBudget(data || []);
+    } catch (error) {
+      console.error("Error en fetchBudgets:", error);
+    }
   };
 
   /** Carga usuarios (solo admin) */
   const fetchUsuarios = async () => {
     if (!isAdmin) return;
-    const { data, error } = await supabase.from("usuarios").select("id,nombre,rol");
-    if (error) return console.error("Error al obtener usuarios:", error);
-    setUsuarios(data.filter(u => u.rol === "estandar"));
+    
+    try {
+      const { data, error } = await supabase
+        .from("usuarios")
+        .select("id, nombre, rol");
+      
+      if (error) {
+        console.error("Error al obtener usuarios:", error);
+        return;
+      }
+      
+      // Filtrar solo usuarios estándar
+      const usuariosEstandar = data.filter(u => u.rol === "estandar");
+      setUsuarios(usuariosEstandar);
+    } catch (error) {
+      console.error("Error en fetchUsuarios:", error);
+    }
   };
 
   /** Obtiene movimientos de un presupuesto */
-  const fetchMovimientos = async id_presupuesto => {
-    const { data, error } = await supabase
-      .from("transacciones")
-      .select("*")
-      .eq("id_presupuesto", id_presupuesto)
-      .order("fecha", { ascending: false });
+  const fetchMovimientos = async (id_presupuesto) => {
+    try {
+      const { data, error } = await supabase
+        .from("transacciones")
+        .select("*")
+        .eq("id_presupuesto", id_presupuesto)
+        .order("fecha", { ascending: false });
 
-    if (error) return console.error("Error al obtener movimientos:", error);
-    setMovimientos(data);
+      if (error) {
+        console.error("Error al obtener movimientos:", error);
+        return;
+      }
+      setMovimientos(data || []);
+    } catch (error) {
+      console.error("Error en fetchMovimientos:", error);
+    }
   };
 
   /* ------------------------------------------------------------------ */
   /* ➕  CRUD PRESUPUESTOS                                              */
   /* ------------------------------------------------------------------ */
+  
   const handleAddBudget = async () => {
     // Validaciones
-    if (!nombre || !periodo || (isAdmin && !idUsuarioSeleccionado)) {
-      return Swal.fire("Campos incompletos", "Completa todos los campos.", "warning");
+    if (!nombre || !periodo) {
+      return Swal.fire("Campos incompletos", "Completa todos los campos obligatorios.", "warning");
+    }
+    
+    if (isAdmin && !idUsuarioSeleccionado) {
+      return Swal.fire("Usuario requerido", "Selecciona un usuario para asignar el presupuesto.", "warning");
     }
 
-    const payload = {
-      nombre,
-      anio,
-      periodo,
-      mes,
-      monto_total: 0,
-      id_usuario: isAdmin ? idUsuarioSeleccionado : user.id,
-    };
+    try {
+      const payload = {
+        nombre,
+        anio,
+        periodo,
+        mes,
+        monto_total: 0,
+        id_usuario: isAdmin ? idUsuarioSeleccionado : user.id,
+      };
 
-    const { error } = await supabase.from("presupuestos").insert([payload]);
+      const { error } = await supabase.from("presupuestos").insert([payload]);
 
-    if (error) {
-      console.error("Error al crear presupuesto", error);
-      return Swal.fire("Error", "No se pudo crear el presupuesto.", "error");
+      if (error) {
+        console.error("Error al crear presupuesto:", error);
+        return Swal.fire("Error", "No se pudo crear el presupuesto.", "error");
+      }
+
+      Swal.fire("Presupuesto creado correctamente", "", "success");
+      
+      // Reset form
+      setShowModal(false);
+      setNombre("");
+      setAnio(currentYear);
+      setPeriodo("");
+      setMes(currentMonth);
+      setIdUsuarioSeleccionado("");
+      
+      fetchBudgets();
+    } catch (error) {
+      console.error("Error en handleAddBudget:", error);
+      Swal.fire("Error", "Ocurrió un error inesperado.", "error");
     }
-
-    Swal.fire("Presupuesto creado correctamente", "", "success");
-    /* Reset */
-    setShowModal(false);
-    setNombre("");
-    setPeriodo("");
-    setIdUsuarioSeleccionado("");
-    fetchBudgets();
   };
 
   const handleUpdateBudget = async () => {
+    if (!presupuestoEditar) return;
+    
     const { id, nombre: n, periodo: p, mes: m, anio: a } = presupuestoEditar;
-    if (!n || !p) return Swal.fire("Campos incompletos", "Completa todos los campos.", "warning");
+    
+    if (!n || !p) {
+      return Swal.fire("Campos incompletos", "Completa todos los campos obligatorios.", "warning");
+    }
 
-    const { error } = await supabase
-      .from("presupuestos")
-      .update({ nombre: n, periodo: p, mes: m, anio: a })
-      .eq("id", id);
+    try {
+      const { error } = await supabase
+        .from("presupuestos")
+        .update({ nombre: n, periodo: p, mes: m, anio: a })
+        .eq("id", id);
 
-    if (error) return Swal.fire("Error", "No se pudo actualizar", "error");
-    Swal.fire("Presupuesto actualizado", "", "success");
-    setShowEditarModal(false);
-    setPresupuestoEditar(null);
-    fetchBudgets();
+      if (error) {
+        console.error("Error al actualizar presupuesto:", error);
+        return Swal.fire("Error", "No se pudo actualizar el presupuesto.", "error");
+      }
+      
+      Swal.fire("Presupuesto actualizado", "", "success");
+      setShowEditarModal(false);
+      setPresupuestoEditar(null);
+      fetchBudgets();
+    } catch (error) {
+      console.error("Error en handleUpdateBudget:", error);
+      Swal.fire("Error", "Ocurrió un error inesperado.", "error");
+    }
   };
 
-  const handleDeleteBudget = async id_presupuesto => {
+  const handleDeleteBudget = async (id_presupuesto) => {
     const { isConfirmed } = await Swal.fire({
-      title: "¿Eliminar presupuesto?",
-      text: "Se eliminarán sus transacciones asociadas.",
+      title: "¿Estás seguro?",
+      text: "Esta acción eliminará el presupuesto y todas sus transacciones asociadas.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
       cancelButtonText: "Cancelar",
       confirmButtonText: "Sí, eliminar",
     });
+    
     if (!isConfirmed) return;
 
-    const { error: transError } = await supabase.from("transacciones").delete().eq("id_presupuesto", id_presupuesto);
-    const { error } = await supabase.from("presupuestos").delete().eq("id", id_presupuesto);
+    try {
+      // Eliminar transacciones asociadas primero
+      const { error: transError } = await supabase
+        .from("transacciones")
+        .delete()
+        .eq("id_presupuesto", id_presupuesto);
 
-    if (error || transError) return Swal.fire("Error", "No se pudo eliminar", "error");
-    Swal.fire("Eliminado", "Presupuesto eliminado correctamente", "success");
-    fetchBudgets();
+      // Eliminar presupuesto
+      const { error } = await supabase
+        .from("presupuestos")
+        .delete()
+        .eq("id", id_presupuesto);
+
+      if (error || transError) {
+        console.error("Error al eliminar:", error || transError);
+        return Swal.fire("Error", "No se pudo eliminar el presupuesto.", "error");
+      }
+      
+      Swal.fire("Eliminado", "Presupuesto eliminado correctamente", "success");
+      fetchBudgets();
+    } catch (error) {
+      console.error("Error en handleDeleteBudget:", error);
+      Swal.fire("Error", "Ocurrió un error inesperado.", "error");
+    }
   };
 
   /* ------------------------------------------------------------------ */
   /* 💸  GASTOS & INGRESOS                                             */
   /* ------------------------------------------------------------------ */
+  
   const registrarTransaccion = async (tipo, datos) => {
     const { descripcion, monto, id_presupuesto } = datos;
+    
+    // Validaciones
     if (!descripcion || !monto || !id_presupuesto) {
       return Swal.fire("Campos incompletos", "Completa todos los campos.", "warning");
     }
-    if (parseFloat(monto) <= 0) {
+    
+    const montoFloat = parseFloat(monto);
+    if (montoFloat <= 0) {
       return Swal.fire("Monto inválido", "El monto debe ser mayor a 0.", "warning");
     }
 
-    // Traer presupuesto actual
-    const { data: presup, error: errPres } = await supabase
-      .from("presupuestos")
-      .select("monto_total")
-      .eq("id", id_presupuesto)
-      .single();
+    try {
+      // Obtener presupuesto actual
+      const { data: presupuesto, error: errPres } = await supabase
+        .from("presupuestos")
+        .select("monto_total")
+        .eq("id", id_presupuesto)
+        .single();
 
-    if (errPres) return Swal.fire("Error", "No se pudo obtener el presupuesto", "error");
+      if (errPres) {
+        console.error("Error al obtener presupuesto:", errPres);
+        return Swal.fire("Error", "No se pudo obtener el presupuesto.", "error");
+      }
 
-    if (tipo === "gasto" && presup.monto_total < parseFloat(monto)) {
-      return Swal.fire("Saldo insuficiente", "No hay suficiente saldo.", "warning");
+      // Verificar saldo suficiente para gastos
+      if (tipo === "gasto" && presupuesto.monto_total < montoFloat) {
+        return Swal.fire("Saldo insuficiente", "No hay suficiente saldo en el presupuesto.", "warning");
+      }
+
+      // Insertar transacción
+      const { error: insertError } = await supabase.from("transacciones").insert([
+        {
+          tipo,
+          monto: montoFloat,
+          origen: "manual",
+          destinatario: descripcion,
+          fecha: new Date().toISOString(),
+          id_presupuesto: parseInt(id_presupuesto),
+        },
+      ]);
+
+      if (insertError) {
+        console.error("Error al insertar transacción:", insertError);
+        return Swal.fire("Error", `No se pudo registrar el ${tipo}.`, "error");
+      }
+
+      // Actualizar monto total del presupuesto
+      const nuevoTotal = tipo === "gasto" 
+        ? presupuesto.monto_total - montoFloat 
+        : presupuesto.monto_total + montoFloat;
+
+      const { error: updateError } = await supabase
+        .from("presupuestos")
+        .update({ monto_total: nuevoTotal })
+        .eq("id", id_presupuesto);
+
+      if (updateError) {
+        console.error("Error al actualizar presupuesto:", updateError);
+        return Swal.fire("Error", "No se pudo actualizar el presupuesto.", "error");
+      }
+
+      Swal.fire(`${tipo === "gasto" ? "Gasto" : "Ingreso"} registrado correctamente`, "", "success");
+      
+      // Reset forms
+      setGasto({ descripcion: "", monto: "", id_presupuesto: "" });
+      setIngreso({ descripcion: "", monto: "", id_presupuesto: "" });
+      setShowGastoModal(false);
+      setShowIngresoModal(false);
+      
+      fetchBudgets();
+    } catch (error) {
+      console.error("Error en registrarTransaccion:", error);
+      Swal.fire("Error", "Ocurrió un error inesperado.", "error");
     }
+  };
 
-    // Inserta transacción
-    const { error: insertError } = await supabase.from("transacciones").insert([
-      {
-        tipo,
-        monto: parseFloat(monto),
-        origen: "manual",
-        destinatario: descripcion,
-        fecha: new Date().toISOString(),
-        id_presupuesto: parseInt(id_presupuesto),
-      },
-    ]);
-    if (insertError) return Swal.fire("Error", "No se pudo registrar", "error");
+  const handleEliminarMovimiento = async (id_movimiento) => {
+    const { isConfirmed } = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "No podrás revertir esta acción",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonText: "Cancelar",
+      confirmButtonText: "Sí, eliminar",
+    });
 
-    // Actualiza monto_total
-    const nuevoTotal = tipo === "gasto" ? presup.monto_total - parseFloat(monto) : presup.monto_total + parseFloat(monto);
-    const { error: updErr } = await supabase
-      .from("presupuestos")
-      .update({ monto_total: nuevoTotal })
-      .eq("id", id_presupuesto);
-    if (updErr) return Swal.fire("Error", "No se pudo actualizar el presupuesto", "error");
+    if (!isConfirmed) return;
 
-    Swal.fire(`${tipo === "gasto" ? "Gasto" : "Ingreso"} registrado`, "", "success");
-    setGasto({ descripcion: "", monto: "", id_presupuesto: "" });
-    setIngreso({ descripcion: "", monto: "", id_presupuesto: "" });
-    setShowGastoModal(false);
-    setShowIngresoModal(false);
-    fetchBudgets();
+    try {
+      const { error } = await supabase
+        .from("transacciones")
+        .delete()
+        .eq("id", id_movimiento);
+
+      if (error) {
+        console.error("Error al eliminar movimiento:", error);
+        return Swal.fire("Error", "No se pudo eliminar el movimiento.", "error");
+      }
+      
+      Swal.fire("Eliminado", "El movimiento fue eliminado.", "success");
+      
+      // Refrescar datos
+      fetchMovimientos(presupuestoActivo);
+      fetchBudgets();
+    } catch (error) {
+      console.error("Error en handleEliminarMovimiento:", error);
+      Swal.fire("Error", "Ocurrió un error inesperado.", "error");
+    }
+  };
+
+  /* ------------------------------------------------------------------ */
+  /* 🔄  HANDLERS DE MODALES                                           */
+  /* ------------------------------------------------------------------ */
+  
+  const handleMostrarMovimientos = (id_presupuesto) => {
+    fetchMovimientos(id_presupuesto);
+    setPresupuestoActivo(id_presupuesto);
+    setMostrarMovimientos(true);
+  };
+
+  const cerrarMovimientos = () => {
+    setMostrarMovimientos(false);
+    setMovimientos([]);
+    setPresupuestoActivo(null);
   };
 
   /* ------------------------------------------------------------------ */
   /* 📡  USE EFFECT                                                    */
   /* ------------------------------------------------------------------ */
+  
   useEffect(() => {
     if (user) {
       fetchBudgets();
       fetchUsuarios();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, isAdmin]);
 
   /* ------------------------------------------------------------------ */
   /* 🖥️  RENDER                                                        */
   /* ------------------------------------------------------------------ */
+  
   return (
     <div className="principal-admin container py-3">
       {/* BOTÓN CREAR */}
-      <button className="btn btn-info mb-3 d-flex align-items-center gap-2" onClick={() => setShowModal(true)}>
+      <button 
+        className="btn btn-info mb-3 d-flex align-items-center gap-2" 
+        onClick={() => setShowModal(true)}
+      >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="20" height="20">
           <path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z" />
         </svg>
@@ -249,13 +412,17 @@ const PrincipalAdmin = () => {
                 )}
               </h6>
               <h1 className="card-text">${b.monto_total.toLocaleString("es-CL")}</h1>
-              <a className="card-link" style={{ cursor: "pointer" }} onClick={() => {
-                fetchMovimientos(b.id);
-                setPresupuestoActivo(b.id);
-                setMostrarMovimientos(true);
-              }}>
+              
+              {/* Enlaces de acciones */}
+              <a 
+                className="card-link" 
+                style={{ cursor: "pointer" }} 
+                onClick={() => handleMostrarMovimientos(b.id)}
+              >
                 Ver Movimientos
               </a>
+              
+              {/* Acciones solo para admin */}
               {isAdmin && (
                 <>
                   <br />
@@ -280,17 +447,30 @@ const PrincipalAdmin = () => {
                   >
                     Agregar Ingreso
                   </a>
-                  <br />
+                </>
+              )}
+              
+              {/* Botones de acción (solo admin) */}
+              {isAdmin && (
+                <>
                   <div style={{ position: "absolute", top: "8px", left: "13rem" }}>
-                    <button className="btn btn-warning btn-sm" onClick={() => {
-                    setPresupuestoEditar(b);
-                    setShowEditarModal(true);
-                  }}>
+                    <button 
+                      className="btn btn-warning btn-sm" 
+                      onClick={() => {
+                        setPresupuestoEditar(b);
+                        setShowEditarModal(true);
+                      }}
+                      title="Editar presupuesto"
+                    >
                       <FaPencilAlt />
                     </button>
                   </div>
                   <div style={{ position: "absolute", top: "8px", right: "8px" }}>
-                    <button className="btn btn-danger btn-sm" onClick={() => handleDeleteBudget(b.id)}>
+                    <button 
+                      className="btn btn-danger btn-sm" 
+                      onClick={() => handleDeleteBudget(b.id)}
+                      title="Eliminar presupuesto"
+                    >
                       <FaTrash />
                     </button>
                   </div>
@@ -309,16 +489,48 @@ const PrincipalAdmin = () => {
           <div className="modal-content">
             <h2>Crear Presupuesto</h2>
             <form onSubmit={e => { e.preventDefault(); handleAddBudget(); }}>
-              <input className="form-control mb-2" placeholder="Nombre" value={nombre} onChange={e => setNombre(e.target.value)} required />
+              <input 
+                className="form-control mb-2" 
+                placeholder="Nombre del presupuesto" 
+                value={nombre} 
+                onChange={e => setNombre(e.target.value)} 
+                required 
+              />
 
-              <select className="form-control mb-2" value={periodo} onChange={e => setPeriodo(e.target.value)} required>
+              <select 
+                className="form-control mb-2" 
+                value={periodo} 
+                onChange={e => setPeriodo(e.target.value)} 
+                required
+              >
                 <option value="">Seleccionar periodo</option>
                 <option value="anual">Anual</option>
                 <option value="mensual">Mensual</option>
               </select>
 
+              <input 
+                type="number" 
+                className="form-control mb-2" 
+                placeholder="Año" 
+                value={anio} 
+                onChange={e => setAnio(parseInt(e.target.value) || currentYear)} 
+                required 
+              />
+
+              <input 
+                className="form-control mb-2" 
+                placeholder="Mes" 
+                value={mes} 
+                onChange={e => setMes(e.target.value)} 
+              />
+
               {isAdmin && (
-                <select className="form-control mb-2" value={idUsuarioSeleccionado} onChange={e => setIdUsuarioSeleccionado(e.target.value)} required>
+                <select 
+                  className="form-control mb-2" 
+                  value={idUsuarioSeleccionado} 
+                  onChange={e => setIdUsuarioSeleccionado(e.target.value)} 
+                  required
+                >
                   <option value="">Asignar a usuario</option>
                   {usuarios.map(u => (
                     <option key={u.id} value={u.id}>
@@ -328,12 +540,18 @@ const PrincipalAdmin = () => {
                 </select>
               )}
 
-              <button className="btn btn-success me-2" type="submit">
-                Crear
-              </button>
-              <button className="btn btn-secondary" onClick={() => setShowModal(false)} type="button">
-                Cancelar
-              </button>
+              <div className="d-flex gap-2">
+                <button className="btn btn-success" type="submit">
+                  Crear
+                </button>
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => setShowModal(false)} 
+                  type="button"
+                >
+                  Cancelar
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -344,62 +562,63 @@ const PrincipalAdmin = () => {
       {/* ---------------------------------------------------------------- */}
       {mostrarMovimientos && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: "600px" }}>
-            <h2>Movimientos Presupuesto ID {presupuestoActivo}</h2>
-            <button className="btn-close position-absolute top-0 end-0 m-3" onClick={() => setMostrarMovimientos(false)}></button>
-            <table className="table table-striped">
-              <thead>
-                <tr>
-                  <th>Tipo</th>
-                  <th>Descripción</th>
-                  <th>Monto</th>
-                  <th>Fecha</th>
-                  {isAdmin && <th></th>}
-                </tr>
-              </thead>
-              <tbody>
-                {movimientos.length ? (
-                  movimientos.map(mov => (
-                    <tr key={mov.id}>
-                      <td>{mov.tipo}</td>
-                      <td>{mov.destinatario}</td>
-                      <td>${mov.monto.toLocaleString("es-CL")}</td>
-                      <td>{new Date(mov.fecha).toLocaleString("es-CL")}</td>
-                      {isAdmin && (
-                        <td>
-                          <button
-                            className="btn btn-danger btn-sm"
-                            title="Eliminar movimiento"
-                            onClick={async () => {
-                              const { isConfirmed } = await Swal.fire({
-                                title: "¿Eliminar movimiento?",
-                                icon: "warning",
-                                showCancelButton: true,
-                                confirmButtonColor: "#d33",
-                                cancelButtonText: "Cancelar",
-                                confirmButtonText: "Sí, eliminar",
-                              });
-                              if (!isConfirmed) return;
-                              const { error } = await supabase.from("transacciones").delete().eq("id", mov.id);
-                              if (error) return Swal.fire("Error", "No se pudo eliminar", "error");
-                              Swal.fire("Eliminado", "Movimiento eliminado", "success");
-                              fetchMovimientos(presupuestoActivo);
-                              fetchBudgets();
-                            }}
-                          >
-                            🗑️
-                          </button>
-                        </td>
-                      )}
-                    </tr>
-                  ))
-                ) : (
+          <div className="modal-content" style={{ maxWidth: "700px" }}>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h2>Movimientos Presupuesto ID {presupuestoActivo}</h2>
+              <button 
+                className="btn btn-danger" 
+                onClick={cerrarMovimientos}
+              >
+                Cerrar
+              </button>
+            </div>
+            
+            <div className="table-responsive">
+              <table className="table table-striped">
+                <thead>
                   <tr>
-                    <td colSpan={isAdmin ? 5 : 4}>No hay movimientos</td>
+                    <th>Tipo</th>
+                    <th>Descripción</th>
+                    <th>Monto</th>
+                    <th>Fecha</th>
+                    {isAdmin && <th>Acciones</th>}
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {movimientos.length ? (
+                    movimientos.map(mov => (
+                      <tr key={mov.id}>
+                        <td>
+                          <span className={`badge ${mov.tipo === 'ingreso' ? 'bg-success' : 'bg-danger'}`}>
+                            {mov.tipo}
+                          </span>
+                        </td>
+                        <td>{mov.destinatario}</td>
+                        <td>${mov.monto.toLocaleString("es-CL")}</td>
+                        <td>{new Date(mov.fecha).toLocaleString("es-CL")}</td>
+                        {isAdmin && (
+                          <td>
+                            <button
+                              className="btn btn-danger btn-sm"
+                              title="Eliminar movimiento"
+                              onClick={() => handleEliminarMovimiento(mov.id)}
+                            >
+                              <FaTrash />
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={isAdmin ? 5 : 4} className="text-center">
+                        No hay movimientos registrados
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -412,14 +631,35 @@ const PrincipalAdmin = () => {
           <div className="modal-content" style={{ maxWidth: "400px" }}>
             <h2>Agregar Gasto</h2>
             <form onSubmit={e => { e.preventDefault(); registrarTransaccion("gasto", gasto); }}>
-              <input className="form-control mb-2" placeholder="Descripción" value={gasto.descripcion} onChange={e => setGasto({ ...gasto, descripcion: e.target.value })} required />
-              <input type="number" className="form-control mb-2" placeholder="Monto" value={gasto.monto} onChange={e => setGasto({ ...gasto, monto: e.target.value })} min="0.01" step="0.01" required />
-              <button className="btn btn-danger me-2" type="submit">
-                Agregar
-              </button>
-              <button className="btn btn-secondary" onClick={() => setShowGastoModal(false)} type="button">
-                Cancelar
-              </button>
+              <input 
+                className="form-control mb-2" 
+                placeholder="Descripción del gasto" 
+                value={gasto.descripcion} 
+                onChange={e => setGasto({ ...gasto, descripcion: e.target.value })} 
+                required 
+              />
+              <input 
+                type="number" 
+                className="form-control mb-2" 
+                placeholder="Monto" 
+                value={gasto.monto} 
+                onChange={e => setGasto({ ...gasto, monto: e.target.value })} 
+                min="0.01" 
+                step="0.01" 
+                required 
+              />
+              <div className="d-flex gap-2">
+                <button className="btn btn-danger" type="submit">
+                  Agregar Gasto
+                </button>
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => setShowGastoModal(false)} 
+                  type="button"
+                >
+                  Cancelar
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -433,14 +673,35 @@ const PrincipalAdmin = () => {
           <div className="modal-content" style={{ maxWidth: "400px" }}>
             <h2>Agregar Ingreso</h2>
             <form onSubmit={e => { e.preventDefault(); registrarTransaccion("ingreso", ingreso); }}>
-              <input className="form-control mb-2" placeholder="Descripción" value={ingreso.descripcion} onChange={e => setIngreso({ ...ingreso, descripcion: e.target.value })} required />
-              <input type="number" className="form-control mb-2" placeholder="Monto" value={ingreso.monto} onChange={e => setIngreso({ ...ingreso, monto: e.target.value })} min="0.01" step="0.01" required />
-              <button className="btn btn-success me-2" type="submit">
-                Agregar
-              </button>
-              <button className="btn btn-secondary" onClick={() => setShowIngresoModal(false)} type="button">
-                Cancelar
-              </button>
+              <input 
+                className="form-control mb-2" 
+                placeholder="Descripción del ingreso" 
+                value={ingreso.descripcion} 
+                onChange={e => setIngreso({ ...ingreso, descripcion: e.target.value })} 
+                required 
+              />
+              <input 
+                type="number" 
+                className="form-control mb-2" 
+                placeholder="Monto" 
+                value={ingreso.monto} 
+                onChange={e => setIngreso({ ...ingreso, monto: e.target.value })} 
+                min="0.01" 
+                step="0.01" 
+                required 
+              />
+              <div className="d-flex gap-2">
+                <button className="btn btn-success" type="submit">
+                  Agregar Ingreso
+                </button>
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => setShowIngresoModal(false)} 
+                  type="button"
+                >
+                  Cancelar
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -454,19 +715,48 @@ const PrincipalAdmin = () => {
           <div className="modal-content" style={{ maxWidth: "400px" }}>
             <h2>Editar Presupuesto</h2>
             <form onSubmit={e => { e.preventDefault(); handleUpdateBudget(); }}>
-              <input className="form-control mb-2" placeholder="Nombre" value={presupuestoEditar.nombre} onChange={e => setPresupuestoEditar({ ...presupuestoEditar, nombre: e.target.value })} required />
-              <select className="form-control mb-2" value={presupuestoEditar.periodo} onChange={e => setPresupuestoEditar({ ...presupuestoEditar, periodo: e.target.value })} required>
+              <input 
+                className="form-control mb-2" 
+                placeholder="Nombre del presupuesto" 
+                value={presupuestoEditar.nombre} 
+                onChange={e => setPresupuestoEditar({ ...presupuestoEditar, nombre: e.target.value })} 
+                required 
+              />
+              <select 
+                className="form-control mb-2" 
+                value={presupuestoEditar.periodo} 
+                onChange={e => setPresupuestoEditar({ ...presupuestoEditar, periodo: e.target.value })} 
+                required
+              >
                 <option value="anual">Anual</option>
                 <option value="mensual">Mensual</option>
               </select>
-              <input type="number" className="form-control mb-2" placeholder="Año" value={presupuestoEditar.anio} onChange={e => setPresupuestoEditar({ ...presupuestoEditar, anio: parseInt(e.target.value) || currentYear })} required />
-              <input className="form-control mb-3" placeholder="Mes" value={presupuestoEditar.mes} onChange={e => setPresupuestoEditar({ ...presupuestoEditar, mes: e.target.value })} />
-              <button className="btn btn-primary me-2" type="submit">
-                Guardar
-              </button>
-              <button className="btn btn-secondary" onClick={() => setShowEditarModal(false)} type="button">
-                Cancelar
-              </button>
+              <input 
+                type="number" 
+                className="form-control mb-2" 
+                placeholder="Año" 
+                value={presupuestoEditar.anio} 
+                onChange={e => setPresupuestoEditar({ ...presupuestoEditar, anio: parseInt(e.target.value) || currentYear })} 
+                required 
+              />
+              <input 
+                className="form-control mb-3" 
+                placeholder="Mes" 
+                value={presupuestoEditar.mes} 
+                onChange={e => setPresupuestoEditar({ ...presupuestoEditar, mes: e.target.value })} 
+              />
+              <div className="d-flex gap-2">
+                <button className="btn btn-primary" type="submit">
+                  Guardar Cambios
+                </button>
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => setShowEditarModal(false)} 
+                  type="button"
+                >
+                  Cancelar
+                </button>
+              </div>
             </form>
           </div>
         </div>
