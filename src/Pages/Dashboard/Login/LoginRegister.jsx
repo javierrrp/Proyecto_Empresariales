@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FaUser, FaLock } from 'react-icons/fa';
+import { FaUser, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { supabase } from '../../../supabase.js'
 import { useUser } from '../../../Context/UserContext.jsx';
 import { Link, useNavigate } from 'react-router-dom';
@@ -12,6 +12,7 @@ const LoginRegister = () => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [rol, setRol] = useState('');
     const [mensaje, setMensaje] = useState('');
     const navigate = useNavigate();
@@ -20,13 +21,14 @@ const LoginRegister = () => {
 
     const [action, setAction] = useState('');
 
-    const registerLink = () => {
-        setAction(' active')
+    let EyeIcon;
+    if (showPassword) {
+    EyeIcon = FaEyeSlash;
+    } else {
+    EyeIcon = FaEye;
     }
 
-    const loginLink = () => {
-        setAction('')
-    }
+
 
 
 
@@ -89,10 +91,16 @@ const LoginRegister = () => {
                             placeholder='Username' required />
                             <FaUser className='icon'/>
                         </div>
-                        <div className='input-box'>
-                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                            placeholder='Password' required />
-                            <FaLock className='icon'/>
+                         <div className='input-box'>
+                            <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder='Password'
+                                required
+                            />
+                            <FaLock className='icon' />
+                            <EyeIcon
+                                className="icon eye-toggle"
+                                onClick={() => setShowPassword(!showPassword)}
+                                style={{marginRight:'20px'}}
+                            />
                         </div>
 
                         <div className='remember-forgot'>
@@ -102,57 +110,10 @@ const LoginRegister = () => {
 
                         <button type='submit'>Login</button>
 
-                        <div className='register-link'>
-                           <p>No tienes una cuenta? <a href='#'
-                            onClick={registerLink}>Registrarse</a></p>
-                        </div>
+                       
                     </form>
                 </div>
 
-                 <div className='form-box register'>
-                    <form action="">
-                        <h1>Registration</h1>
-                        <div className='input-box'>
-                            <input type="text" value={username}
-                            placeholder='Username' required />
-                            <FaUser className='icon'/>
-                        </div>
-                        <div className='input-box'>
-                            <input type="email" value={email} 
-                            placeholder='Email' required />
-                            <FaUser className='icon'/>
-                        </div>
-                        <div className='input-box'>
-                            <input type="password" value={password}
-                            placeholder='Password' required />
-                            <FaLock className='icon'/>
-                        </div>
-
-                    
-                        <div className='role-select'>
-                            <label htmlFor='role'>Seleccione tipo de usuario</label>
-                            <select name='role' id='role'>
-                                <option value=''>Seleccione un rol</option>
-                                <option value='admin'>Administrador</option>
-                                <option value='standard'>Estandar</option>
-                                <option value='auditor'>Auditor</option>
-                            </select>
-                        </div>
-
-                        <div className='remember-forgot'>
-                            <label><input type='checkbox' />Acepto los terminos y condiciones</label>
-                            <a href="#">Forgot password?</a>
-                        </div>
-
-
-                        <button type='submit'>Registrarse</button>
-
-                        <div className='register-link'>
-                            <p>Ya tienes una cuenta? <a href='#'
-                            onClick={loginLink}>Login</a></p>
-                        </div>
-                    </form>
-                </div>
             </div>
 
 

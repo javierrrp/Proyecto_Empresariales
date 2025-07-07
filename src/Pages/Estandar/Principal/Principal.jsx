@@ -3,6 +3,7 @@ import { supabase } from '../../../supabase.js';
 import { useUser } from '../../../Context/UserContext.jsx';
 import { FaPiggyBank } from "react-icons/fa";
 import Swal from 'sweetalert2';
+import * as XLSX from "xlsx";
 import "./Principal.css";
 
 const PrincipalEstandar = () => {
@@ -86,9 +87,44 @@ const PrincipalEstandar = () => {
     GetBudget();
   };
 
+  const resumenFinanciero = presupuestosList.reduce(
+    (acc, item) => {
+      if (item.tipo.toLowerCase() === "ingreso") {
+        acc.ingresos += Number(item.monto);
+      } else if (item.tipo.toLowerCase() === "egreso") {
+        acc.egresos += Number(item.monto);
+      }
+      return acc;
+    },
+    { ingresos: 0, egresos: 0 }
+  );
+  resumenFinanciero.balance = resumenFinanciero.ingresos - resumenFinanciero.egresos;
+
+  const exportar_excel = () => {
+      const wb = XLSX.utils.book_new();
+  
+      // Hoja 1: Movimientos (todos los datos)
+      // Convierte array de objetos a hoja
+      const wsMovimientos = XLSX.utils.json_to_sheet(presupuestosList);
+      XLSX.utils.book_append_sheet(wb, wsMovimientos, "Movimientos");
+  
+      // Hoja 2: Resumen financiero
+      const resumenData = [
+        ["Resumen Movimientos"],
+        ["Ingresos", resumenFinanciero.ingresos],
+        ["Egresos", resumenFinanciero.egresos],
+        ["Balance", resumenFinanciero.balance],
+      ];
+      const wsResumen = XLSX.utils.aoa_to_sheet(resumenData);
+      XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen");
+  
+      XLSX.writeFile(wb, "movimientosestandar.xlsx");
+  };
   useEffect(() => {
     if (user) GetBudget();
   }, [user]);
+
+
 
   return (
     <div>
@@ -127,6 +163,7 @@ const PrincipalEstandar = () => {
                   </li>
                 ))}
               </ul>}
+            <button className="btn btn-danger" onClick={exportar_excel}>Exportar</button>
           </div>
         </div>
       )}
