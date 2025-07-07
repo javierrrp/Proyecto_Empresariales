@@ -16,10 +16,12 @@ const Navbar = () => {
 
   // Definir la ruta de inicio según el rol del usuario
   let homePath = '/';
-  if (user?.role === 'admin') {
+  if (user?.rol === 'admin') {
     homePath = '/admin';
-  } else if (user?.role === 'auditor') {
+  } else if (user?.rol === 'auditor') {
     homePath = '/auditor';
+  } else if (user?.rol === 'estandar'){
+    homePath = '/estandar';
   }
 
   // Cerrar sesión y volver a la pantalla pública
@@ -60,9 +62,6 @@ const Navbar = () => {
             </li>
             <li className="nav-item">
               <NavLink to="/services" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Servicios</NavLink>
-            </li>
-            <li className="nav-item">
-              <NavLink to="/opiniones" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Opiniones</NavLink>
             </li>
 
             {/* Usuario logueado */}

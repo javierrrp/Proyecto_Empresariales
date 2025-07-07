@@ -447,16 +447,6 @@ const PrincipalAdmin = () => {
                 Agregar Ingreso
               </a>
               <br />
-              <a
-                className="card-link"
-                style={{ cursor: "pointer" }}
-                onClick={() => {
-                  setPresupuestoEditar(b);
-                  setShowEditarModal(true);
-                }}
-              >
-                Editar Cuenta
-              </a>
               
               {/* Botones de acción */}
               <div style={{ position: "absolute", top: "8px", left: "13rem" }}>
