@@ -2,6 +2,7 @@ import './Navbar.css';
 import { useUser } from '../../Context/UserContext';
 import { useNavigate, NavLink } from 'react-router-dom';
 import logo from '../Images/logo.png';
+import Swal from 'sweetalert2';
 
 /**
  * Responsive top‑navigation bar.
@@ -26,8 +27,24 @@ const Navbar = () => {
 
   // Cerrar sesión y volver a la pantalla pública
   const handleLogout = () => {
-    logout();
-    navigate('/');
+    Swal.fire({
+        title: '¿Cerrar sesión?',
+        text: 'Se cerrará tu sesión actual y volverás al inicio.',
+        icon: 'question',         
+        showCancelButton: true,
+        confirmButtonText: 'Si',
+        confirmButtonColor: 'red',
+        cancelButtonText: 'No',
+        cancelButtonColor: 'gray',
+        reverseButtons: true     
+      }).then((result) => {
+        if(result.isConfirmed){
+          alert('Sesion Cerrada Exitosamente');
+          logout();
+          navigate('/');
+        }
+      })
+    
   };
 
   return (
